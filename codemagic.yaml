@@ -35,7 +35,7 @@ workflows:
         BUNDLE_ID: com.mydigitalsports.app
         TEAM_ID: 2A78MFVCJS
         PROFILE_NAME: My Digital Sports
-        APP_STORE_CONNECT_KEY_IDENTIFIER: KF2R947UR5
+        APP_STORE_CONNECT_KEY_IDENTIFIER: 4DSTZCK23W
         APP_STORE_CONNECT_ISSUER_ID: 66d4ce13-148d-4d6b-bab8-f1d0d8441a1e
 
     scripts:
