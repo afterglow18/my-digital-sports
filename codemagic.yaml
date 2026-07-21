@@ -25,7 +25,6 @@ workflows:
       node: 22
       groups:
         - signing
-        - build_env
       vars:
         GIT_LFS_SKIP_SMUDGE: "1"
         XCODE_SCHEME: App
