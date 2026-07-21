@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.mydigitalsports.app',
-  appName: 'My Digital Sports',
+  appName: 'My Sports',
   webDir: 'dist/public',
 
   // -------------------------------------------------------------------------
