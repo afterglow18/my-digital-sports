@@ -27,6 +27,7 @@ workflows:
         - signing
         - build_env
       vars:
+        GIT_LFS_SKIP_SMUDGE: "1"
         XCODE_SCHEME: App
         XCODE_PROJECT: artifacts/outfit-generator/ios/App/App.xcodeproj
         XCODE_WORKSPACE: artifacts/outfit-generator/ios/App/App.xcodeproj/project.xcworkspace
