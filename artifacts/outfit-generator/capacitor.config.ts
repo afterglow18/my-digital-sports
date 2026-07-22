@@ -15,6 +15,19 @@ const config: CapacitorConfig = {
     backgroundColor: '#F9F4EE',
     // Allow inline media playback (used for wardrobe image previews)
     allowsInlineMediaPlayback: true,
+
+    // -------------------------------------------------------------------------
+    // Privacy usage descriptions — all three are required for camera/photo access.
+    // Missing any one causes a SIGABRT crash (TCC violation) or silent refusal.
+    // -------------------------------------------------------------------------
+    infoPlist: {
+      NSCameraUsageDescription:
+        'My Digital Sports needs camera access so you can photograph clothing items to add to your wardrobe.',
+      NSPhotoLibraryUsageDescription:
+        'My Digital Sports needs photo library access so you can choose clothing photos from your library.',
+      NSPhotoLibraryAddUsageDescription:
+        'My Digital Sports saves photos you take with the camera to your photo library.',
+    },
   },
 
   plugins: {
