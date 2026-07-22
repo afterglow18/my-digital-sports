@@ -162,7 +162,7 @@ export default function AccountPage() {
       {/* Page title */}
       <header className="mb-5">
         <h1 className="font-display font-bold text-4xl uppercase tracking-tighter leading-none">
-          My Digital<br />Suitcase
+          My Digital<br />Sports
         </h1>
       </header>
 

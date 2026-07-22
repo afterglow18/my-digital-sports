@@ -149,7 +149,11 @@ export function UpgradeSheet({ reason, onClose }: Props) {
     if (status === "pending") return;
     setStatus("pending");
     const pkg = getRcPackage(offerings, TIER_DEFAULTS[selected].pkgId);
-    if (!pkg) { setStatus("idle"); return; }
+    if (!pkg) {
+      setStatus("idle");
+      alert("Subscription products aren't loaded yet. Make sure you're connected to the internet, then close and reopen this screen.");
+      return;
+    }
     try {
       await purchase(pkg);
       onClose();
