@@ -12,6 +12,13 @@ import { X, Check } from "lucide-react";
 import { useEntitlements, PurchaseResult } from "@/hooks/useEntitlements";
 import type { PurchaseProduct } from "@/lib/entitlements";
 
+const PRIVACY_URL = "https://app.notion.com/p/My-Digital-Collection-Privacy-Policy-39682db6065380b19dedcb108d4a0ef4?source=copy_link";
+const TERMS_URL   = "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
+
+function openUrl(url: string) {
+  window.open(url, "_system");
+}
+
 interface Props {
   onClose: () => void;
 }
@@ -25,7 +32,7 @@ const PRO_FEATURES = [
 ] as const;
 
 export function PremiumSheet({ onClose }: Props) {
-  const { purchase } = useEntitlements();
+  const { purchase, restore, isRestoring } = useEntitlements();
   const [pending, setPending] = useState<PurchaseProduct | null>(null);
 
   const handlePurchase = useCallback(
@@ -136,6 +143,32 @@ export function PremiumSheet({ onClose }: Props) {
         >
           Maybe Later
         </button>
+
+        {/* Restore Purchases */}
+        <button
+          onClick={() => restore()}
+          disabled={isRestoring}
+          className="text-xs font-semibold text-black/35 text-center hover:text-black/55 transition-colors disabled:opacity-50"
+        >
+          {isRestoring ? "Restoring…" : "Restore Purchases"}
+        </button>
+
+        {/* Legal links */}
+        <div className="flex items-center justify-center gap-3 pb-1">
+          <button
+            onClick={() => openUrl(TERMS_URL)}
+            className="text-[10px] font-medium text-black/30 underline underline-offset-2 hover:text-black/50 transition-colors"
+          >
+            Terms of Use
+          </button>
+          <span className="text-black/20 text-[10px]">·</span>
+          <button
+            onClick={() => openUrl(PRIVACY_URL)}
+            className="text-[10px] font-medium text-black/30 underline underline-offset-2 hover:text-black/50 transition-colors"
+          >
+            Privacy Policy
+          </button>
+        </div>
       </div>
     </motion.div>
   );

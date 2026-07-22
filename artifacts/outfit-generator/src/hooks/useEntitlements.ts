@@ -26,7 +26,7 @@ export type PurchaseProduct = "unlock" | "premium"; // kept for call-site compat
 export function setGlobalTier(_t: Tier): void { /* no-op */ }
 
 export function useEntitlements() {
-  const { isSubscribed, offerings, purchase: rcPurchase, isPurchasing } =
+  const { isSubscribed, offerings, purchase: rcPurchase, isPurchasing, restore, isRestoring } =
     useSubscription();
 
   // Both "unlock" and "premium" products now map to the RC "unlock" tier.
@@ -64,5 +64,5 @@ export function useEntitlements() {
     [offerings, rcPurchase],
   );
 
-  return { tier, caps, canAddItem, canSaveOutfit, purchase, isPurchasing };
+  return { tier, caps, canAddItem, canSaveOutfit, purchase, isPurchasing, restore, isRestoring };
 }
