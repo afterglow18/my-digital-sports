@@ -287,7 +287,7 @@ export default function GeneratePage() {
                 color: "#1a0800",
                 lineHeight: 1.1,
               }}>
-                MY DIGITAL SUITCASE
+                MY DIGITAL SPORTS
               </div>
               <div style={{
                 fontFamily: "var(--font-display, serif)",
@@ -409,13 +409,13 @@ export default function GeneratePage() {
                     padding: "3px 11px", borderRadius: 20,
                     whiteSpace: "nowrap",
                   }}>
-                    Packing your suitcase…
+                    Building your kit…
                   </span>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* ── Empty suitcase prompt ── */}
+            {/* ── Empty locker prompt ── */}
             {!hasItems && (
               <div style={{
                 position: "absolute",
@@ -435,13 +435,13 @@ export default function GeneratePage() {
                   letterSpacing: "0.07em", textTransform: "uppercase",
                   color: "#3A2210", fontFamily: "var(--font-display)", margin: 0,
                 }}>
-                  Your suitcase is empty
+                  Your locker is empty
                 </p>
                 <p style={{
                   fontSize: 11, color: "#9a5060",
                   marginTop: 5, lineHeight: 1.5,
                 }}>
-                  Add outfits, beauty, toiletries or essentials in the Suitcase tab first.
+                  Add outfits, beauty, toiletries or essentials in the Locker tab first.
                 </p>
               </div>
             )}
@@ -573,7 +573,7 @@ export default function GeneratePage() {
                         gap: 2, padding: "0 12px",
                       }}
                     >
-                      <span>Repack</span>
+                      <span>Reset</span>
                       <span style={{ fontSize: 14, lineHeight: 1 }}>✨</span>
                     </button>
 

@@ -4,7 +4,7 @@
  * Layout (top to bottom):
  *   1. MY PLAN      — current plan badge, upgrade CTA, restore link
  *   2. BACKUP & RESTORE — export/import with warning text
- *   3. MY DIGITAL SUITCASE — app version + tagline
+ *   3. MY DIGITAL SPORTS — app version + tagline
  */
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -271,7 +271,7 @@ export default function AccountPage() {
         {/* ── 3. BACKUP & RESTORE ─────────────────────────────────────────── */}
         <Card emoji="💾" title="Backup & Restore">
           <p className="text-sm text-black/60 leading-snug">
-            Export your suitcase to a file. Save it to iCloud Drive or Files to
+            Export your locker to a file. Save it to iCloud Drive or Files to
             keep it safe across phone upgrades.
           </p>
 
@@ -284,7 +284,7 @@ export default function AccountPage() {
 
           {/* Warning */}
           <p className="text-sm font-bold leading-snug" style={{ color: "#C0390B" }}>
-            ⚠️ Deleting the app removes all your suitcase data.
+            ⚠️ Deleting the app removes all your locker data.
             Export a backup first to keep it safe.
           </p>
 
@@ -296,7 +296,7 @@ export default function AccountPage() {
           />
 
           <p className="text-xs text-black/40 text-center leading-snug">
-            Importing replaces your current suitcase with the backup.
+            Importing replaces your current locker with the backup.
           </p>
         </Card>
 
@@ -306,7 +306,7 @@ export default function AccountPage() {
             Version 1.0.0
           </p>
           <p className="text-sm text-black/55 leading-snug">
-            Your suitcase stays on your device, works offline, and can be
+            Your locker stays on your device, works offline, and can be
             backed up with iCloud.
           </p>
         </Card>

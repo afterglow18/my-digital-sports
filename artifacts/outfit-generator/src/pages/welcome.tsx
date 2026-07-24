@@ -265,7 +265,7 @@ export default function WelcomePage({ onEnter }: Props) {
             lineHeight: 1.1,
             color: "#E8D4B0",
           }}>
-            MY DIGITAL<br />SUITCASE
+            MY DIGITAL<br />SPORTS
           </div>
           <div style={{
             marginTop: 9,
@@ -275,7 +275,7 @@ export default function WelcomePage({ onEnter }: Props) {
             textTransform: "uppercase" as const,
             color: "rgba(232,212,176,0.42)",
           }}>
-            your travel collection
+            your sports collection
           </div>
         </div>
 
@@ -303,7 +303,7 @@ export default function WelcomePage({ onEnter }: Props) {
             pointerEvents: phase === "idle" ? "auto" : "none",
           }}
         >
-          Open Suitcase ✨
+          Open Locker ✨
         </motion.button>
       </motion.div>
 
@@ -321,7 +321,7 @@ export default function WelcomePage({ onEnter }: Props) {
           style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.25)", textDecoration: "none", letterSpacing: "0.02em" }}
         >Privacy Policy</a>
         <a
-          href="https://app.notion.com/p/My-Digital-Closet-Support-39782db60653802a9088dcbae84c0527?source=copy_link"
+          href="https://app.notion.com/p/My-Digital-Sports-Support-39782db60653802a9088dcbae84c0527?source=copy_link"
           target="_blank" rel="noopener noreferrer"
           style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.25)", textDecoration: "none", letterSpacing: "0.02em" }}
         >Support</a>
