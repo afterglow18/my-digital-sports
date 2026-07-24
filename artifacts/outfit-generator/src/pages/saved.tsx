@@ -211,13 +211,13 @@ export default function SavedPage() {
       )}
 
       {isLoading ? (
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-52 bg-muted animate-pulse border-2 border-black rounded-xl" />
           ))}
         </div>
       ) : outfits && outfits.length > 0 ? (
-        <div className="flex flex-col gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {outfits.map((outfit) => {
             // Group items by category — first match per slot wins
             const bySlot = (outfit.items ?? []).reduce<Partial<Record<SlotKey, ClothingItem>>>(

@@ -207,7 +207,7 @@ export default function WardrobePage() {
       style={{
         position: "relative",
         width: "100%",
-        height: `calc(100dvh - ${NAV_H}px)`,
+        height: "calc(100dvh - var(--app-nav-h, 90px))",
         overflow: "hidden",
         background: "#C8B9A2",
       }}
@@ -252,7 +252,7 @@ export default function WardrobePage() {
               color: "#1a0800",
               lineHeight: 1.1,
             }}>
-              MY DIGITAL SUITCASE
+              MY DIGITAL SPORTS
             </div>
           </div>
 

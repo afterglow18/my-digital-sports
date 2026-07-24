@@ -63,6 +63,18 @@
 :root {
   --app-font-sans: 'Outfit', sans-serif;
   --app-font-display: 'Syne', sans-serif;
+
+  /* Bottom nav height — 0 when the sidebar is shown on iPad/desktop */
+  --app-nav-h: 90px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --app-nav-h: 0px;
+  }
+}
+
+:root {
   
   /* Suitcase Palette: Warm Tan, Leather Brown, Cream, Black */
   --background: 40 30% 97%; /* Cream */
