@@ -2,11 +2,12 @@
  * ItemDetailsSheet — full-screen overlay showing a clothing item's details.
  * Every field is optional and editable. A "Save" button appears only when
  * the form is dirty. Delete is always available.
+ * "Remove Background ✨" button lets users clean up photos of existing items.
  */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Heart, Trash2, Save, ChevronDown,
+  X, Heart, Trash2, Save, ChevronDown, Loader2, Check, RotateCcw,
 } from "lucide-react";
 import {
   type ClothingItem,
@@ -19,6 +20,12 @@ import {
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
+import {
+  removeBackground,
+  dataUrlToBlob,
+  blobToDataUrl as bgBlobToDataUrl,
+  blobToStorageDataUrl,
+} from "@/lib/backgroundRemoval";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -27,17 +34,9 @@ const OCCASION_OPTIONS  = ["", "Casual", "Work", "Formal", "Sport", "Special Eve
 const CATEGORY_OPTIONS  = ["outfits", "beauty", "toiletries", "essentials"];
 
 function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
+  label, value, onChange, placeholder, type = "text",
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  type?: string;
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -58,15 +57,9 @@ function Field({
 }
 
 function SelectField({
-  label,
-  value,
-  onChange,
-  options,
+  label, value, onChange, options,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
+  label: string; value: string; onChange: (v: string) => void; options: string[];
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -82,9 +75,7 @@ function SelectField({
                      cursor-pointer"
         >
           {options.map((o) => (
-            <option key={o} value={o}>
-              {o || `— ${label} —`}
-            </option>
+            <option key={o} value={o}>{o || `— ${label} —`}</option>
           ))}
         </select>
         <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-black/40" />
@@ -96,23 +87,15 @@ function SelectField({
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface ItemDetailsSheetProps {
-  item: ClothingItem | null;
-  onClose: () => void;
+  item:      ClothingItem | null;
+  onClose:   () => void;
   onDeleted?: () => void;
 }
 
 interface FormState {
-  name: string;
-  brand: string;
-  color: string;
-  size: string;
-  season: string;
-  occasion: string;
-  purchasePrice: string;
-  purchaseDate: string;
-  notes: string;
-  isFavorite: boolean;
-  category: string;
+  name: string; brand: string; color: string; size: string;
+  season: string; occasion: string; purchasePrice: string;
+  purchaseDate: string; notes: string; isFavorite: boolean; category: string;
 }
 
 function toForm(item: ClothingItem): FormState {
@@ -147,9 +130,19 @@ function isDirty(form: FormState, item: ClothingItem): boolean {
   );
 }
 
+// BG-removal state machine for the item photo
+type BgPhase = "idle" | "processing" | "preview";
+
 export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
-  const [form, setForm]           = useState<FormState | null>(null);
+  const [form, setForm]                   = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Background removal
+  const [bgPhase,      setBgPhase]      = useState<BgPhase>("idle");
+  const [cleanedUrl,   setCleanedUrl]   = useState<string | null>(null);
+  const [cleanedBlob,  setCleanedBlob]  = useState<Blob | null>(null);
+  const [bgError,      setBgError]      = useState<string | null>(null);
+  const bgGenRef = useRef(0);
 
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
@@ -159,6 +152,12 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   useEffect(() => {
     if (item) setForm(toForm(item));
     setShowDeleteConfirm(false);
+    // Also reset BG state on item change
+    bgGenRef.current += 1;
+    setBgPhase("idle");
+    setCleanedUrl(null);
+    setCleanedBlob(null);
+    setBgError(null);
   }, [item?.id]);
 
   if (!item || !form) return null;
@@ -168,13 +167,13 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   const patch = (key: keyof FormState) => (value: string | boolean) =>
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
 
+  // ── Field save ──────────────────────────────────────────────────────────
+
   const handleSave = () => {
     updateItem.mutate(
       {
         id: item.id,
         data: {
-          // Always send every editable field so the backend can clear it when empty.
-          // Backend converts "" → null in DB.
           name:          form.name.trim() || item.name,
           brand:         form.brand.trim(),
           color:         form.color.trim(),
@@ -199,6 +198,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
     );
   };
 
+  // ── Delete ──────────────────────────────────────────────────────────────
+
   const handleDelete = () => {
     deleteItem.mutate(
       { id: item.id },
@@ -213,6 +214,66 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
       }
     );
   };
+
+  // ── Background removal ──────────────────────────────────────────────────
+
+  const handleRemoveBackground = async () => {
+    if (!item.imageObjectPath) return;
+    setBgError(null);
+    setBgPhase("processing");
+    const myGen = ++bgGenRef.current;
+    try {
+      const resultDataUrl  = await removeBackground(item.imageObjectPath);
+      if (bgGenRef.current !== myGen) return;
+      const resultBlob     = await dataUrlToBlob(resultDataUrl);
+      if (bgGenRef.current !== myGen) return;
+      const previewObjUrl  = URL.createObjectURL(resultBlob);
+      if (bgGenRef.current !== myGen) { URL.revokeObjectURL(previewObjUrl); return; }
+      setCleanedBlob(resultBlob);
+      setCleanedUrl(previewObjUrl);
+      setBgPhase("preview");
+    } catch (err) {
+      if (bgGenRef.current !== myGen) return;
+      console.warn("Background removal failed:", err);
+      setBgError("Could not remove background. Please try again.");
+      setBgPhase("idle");
+    }
+  };
+
+  const handleDiscardCleaned = () => {
+    bgGenRef.current += 1;
+    setBgPhase("idle");
+    setCleanedUrl(null);
+    setCleanedBlob(null);
+    setBgError(null);
+  };
+
+  const handleApplyCleaned = () => {
+    if (!cleanedBlob) return;
+    blobToStorageDataUrl(cleanedBlob).then((dataUrl) => {
+      updateItem.mutate(
+        { id: item.id, data: { imageObjectPath: dataUrl } as Parameters<typeof updateItem.mutate>[0]["data"] },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+            queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+            queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+            setBgPhase("idle");
+            setCleanedUrl(null);
+            setCleanedBlob(null);
+          },
+        }
+      );
+    });
+  };
+
+  // Decide which image to show in the photo area
+  const displayPhotoUrl =
+    bgPhase === "preview" && cleanedUrl
+      ? cleanedUrl
+      : getImageUrl(item.imageObjectPath);
+
+  const hasPhoto = !!item.imageObjectPath;
 
   return (
     <motion.div
@@ -270,27 +331,94 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         </div>
       </div>
 
-      {/* ── Photo ── */}
-      {item.imageObjectPath && (
-        <div
-          className="w-full h-52 flex-shrink-0 border-b-2 border-black"
-          style={{
-            backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
-            backgroundSize: "16px 16px",
-          }}
-        >
-          <img
-            src={getImageUrl(item.imageObjectPath)!}
-            alt={item.name}
-            className="w-full h-full object-contain"
-          />
+      {/* ── Photo area ── */}
+      {hasPhoto && (
+        <div className="border-b-2 border-black flex-shrink-0">
+          {/* Image */}
+          <div
+            className="w-full h-52 relative"
+            style={{
+              background: bgPhase === "preview"
+                ? "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 12px 12px"
+                : "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%) 0 0 / 16px 16px",
+            }}
+          >
+            {displayPhotoUrl && (
+              <img
+                src={displayPhotoUrl}
+                alt={item.name}
+                className="w-full h-full object-contain"
+              />
+            )}
+
+            {/* Processing overlay */}
+            {bgPhase === "processing" && (
+              <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-2">
+                <Loader2 className="w-8 h-8 animate-spin" strokeWidth={1.5} />
+                <p className="text-xs font-bold uppercase tracking-widest text-black/50">
+                  Removing background…
+                </p>
+              </div>
+            )}
+
+            {/* Preview badge */}
+            {bgPhase === "preview" && (
+              <div className="absolute top-2 left-2 px-2 py-0.5 bg-black text-white
+                              text-[10px] font-bold uppercase tracking-widest rounded-full">
+                Preview
+              </div>
+            )}
+          </div>
+
+          {/* Error */}
+          {bgError && (
+            <p className="text-xs text-red-600 text-center px-4 py-2 bg-red-50 border-t border-red-200">
+              {bgError}
+            </p>
+          )}
+
+          {/* BG removal controls — below image */}
+          {bgPhase === "idle" && (
+            <button
+              onClick={handleRemoveBackground}
+              className="w-full py-2.5 flex items-center justify-center gap-2
+                         text-xs font-bold uppercase tracking-wider text-black/60
+                         bg-white hover:bg-[#f9f4ee] transition-colors"
+            >
+              ✨ Remove Background
+            </button>
+          )}
+
+          {bgPhase === "preview" && (
+            <div className="flex border-t-2 border-black">
+              <button
+                onClick={handleDiscardCleaned}
+                className="flex-1 py-2.5 flex items-center justify-center gap-1.5
+                           text-xs font-bold uppercase tracking-wider text-black/50
+                           bg-white border-r-2 border-black hover:bg-[#f9f4ee] transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Keep Original
+              </button>
+              <button
+                onClick={handleApplyCleaned}
+                disabled={updateItem.isPending}
+                className="flex-1 py-2.5 flex items-center justify-center gap-1.5
+                           text-xs font-bold uppercase tracking-wider
+                           bg-black text-white hover:bg-black/80 transition-colors
+                           disabled:opacity-50"
+              >
+                <Check className="w-3.5 h-3.5" />
+                {updateItem.isPending ? "Saving…" : "✓ Apply"}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* ── Form ── */}
       <div className="flex-1 px-4 py-5 flex flex-col gap-4">
 
-        {/* Name */}
         <Field
           label="Item Name"
           value={form.name}
@@ -298,28 +426,23 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           placeholder="e.g. White Linen Shirt"
         />
 
-        {/* Brand + Color */}
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Brand"  value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Nike, Zara…" />
-          <Field label="Color"  value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
+          <Field label="Brand" value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Nike, Zara…" />
+          <Field label="Color" value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
         </div>
 
-        {/* Size */}
         <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="30ml, 50ml, Full Size…" />
 
-        {/* Season + Occasion */}
         <div className="grid grid-cols-2 gap-3">
           <SelectField label="Season"   value={form.season}   onChange={patch("season") as (v: string) => void}   options={SEASON_OPTIONS} />
           <SelectField label="Occasion" value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={OCCASION_OPTIONS} />
         </div>
 
-        {/* Price + Date */}
         <div className="grid grid-cols-2 gap-3">
           <Field label="Purchase Price" value={form.purchasePrice} onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
           <Field label="Purchase Date"  value={form.purchaseDate}  onChange={patch("purchaseDate") as (v: string) => void}  type="date" />
         </div>
 
-        {/* Notes */}
         <div className="flex flex-col gap-1">
           <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
             Notes
@@ -335,7 +458,6 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           />
         </div>
 
-        {/* Category (editable) + Times Worn (read-only) */}
         <div className="grid grid-cols-2 gap-3">
           <SelectField
             label="Category"
@@ -356,7 +478,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
       {/* ── Footer actions ── */}
       <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
 
-        {/* Save (only when dirty) */}
+        {/* Save fields (only when dirty) */}
         <AnimatePresence>
           {dirty && (
             <motion.button

@@ -1,11 +1,11 @@
 /**
  * QuickAddSheet — photo upload with on-device background removal.
  *
- * Single-photo flow (camera, or single gallery pick):
- *   pick → encoding → preview (Original | Cleaned ✨ side-by-side) → uploading → close
+ * Every photo (camera or gallery) goes through:
+ *   pick → encoding → preview (Original | Cleaned ✨) → save → [next photo | close]
  *
- * Multi-photo flow (gallery multi-select ≥ 2):
- *   pick → uploading → close  (no preview — processes sequentially as before)
+ * For multi-select gallery picks, photos are processed one at a time.
+ * A "Photo X of Y" counter is shown when queue length > 1.
  */
 import React, { useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -20,6 +20,7 @@ import {
   removeBackground,
   blobToDataUrl as bgBlobToDataUrl,
   dataUrlToBlob,
+  blobToStorageDataUrl,
 } from "@/lib/backgroundRemoval";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -39,14 +40,9 @@ type Phase =
   | "preview"    // side-by-side original | cleaned comparison
   | "uploading"; // saving to DB
 
-interface UploadProgress {
-  current: number;
-  total:   number;
-}
+// ── encodeForUpload ───────────────────────────────────────────────────────────
 
-// ── encodeForUpload (outside component — no hook deps) ────────────────────────
-
-/** Resize to ≤ 2048px and return a JPEG blob, ready for background removal. */
+/** Resize to ≤ 2048px and return a JPEG blob ready for background removal. */
 async function encodeForUpload(input: File | Blob): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(input);
@@ -70,40 +66,6 @@ async function encodeForUpload(input: File | Blob): Promise<Blob> {
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
       reject(new Error("failed to load image"));
-    };
-    img.src = objectUrl;
-  });
-}
-
-/**
- * Resize a blob to ≤ 800px and convert to a data URL for DB storage.
- * Preserves PNG format (transparency) for cleaned images; JPEG for originals.
- */
-async function blobToStorageDataUrl(blob: Blob): Promise<string> {
-  const isPng = blob.type === "image/png";
-  return new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      const MAX   = 800;
-      const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
-      const w     = Math.round(img.naturalWidth  * scale);
-      const h     = Math.round(img.naturalHeight * scale);
-      const canvas = document.createElement("canvas");
-      canvas.width  = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d")!;
-      if (isPng) {
-        // Keep transparent pixels — do NOT fill with white
-        ctx.clearRect(0, 0, w, h);
-      }
-      ctx.drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL(isPng ? "image/png" : "image/jpeg", 0.85));
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error("failed to load image for storage"));
     };
     img.src = objectUrl;
   });
@@ -138,7 +100,12 @@ interface Props {
 export function QuickAddSheet({ open, onOpenChange, category, existingCount, onCreated }: Props) {
   const [phase,        setPhase]        = useState<Phase>("pick");
   const [errorMsg,     setErrorMsg]     = useState<string | null>(null);
-  const [progress,     setProgress]     = useState<UploadProgress | null>(null);
+
+  // ── Photo queue (multi-select) ────────────────────────────────────────────
+  const [fileQueue,    setFileQueue]    = useState<File[]>([]);
+  const [queueIndex,   setQueueIndex]   = useState(0);
+  // savedCount tracks how many items have already been committed (for auto-naming)
+  const [savedCount,   setSavedCount]   = useState(0);
 
   // ── Background-removal state ──────────────────────────────────────────────
   const [originalBlob, setOriginalBlob] = useState<Blob | null>(null);
@@ -159,22 +126,28 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
   const label = CATEGORY_LABELS[category];
 
-  // ── Reset / close ─────────────────────────────────────────────────────────
+  // ── Full reset / close ────────────────────────────────────────────────────
 
-  const handleClose = useCallback(() => {
-    bgGenRef.current += 1;   // cancel any in-flight removal
-    setBgProcessing(false);  // MUST reset — close can happen mid-removal
-    setPhase("pick");
-    setErrorMsg(null);
-    setProgress(null);
+  const resetPreviewState = useCallback(() => {
+    bgGenRef.current += 1;
+    setBgProcessing(false);
     setOriginalBlob(null);
     setOriginalUrl(null);
     setCleanedBlob(null);
     setCleanedUrl(null);
     setBgFailed(false);
     setSelected("original");
+  }, []);
+
+  const handleClose = useCallback(() => {
+    resetPreviewState();
+    setPhase("pick");
+    setErrorMsg(null);
+    setFileQueue([]);
+    setQueueIndex(0);
+    setSavedCount(0);
     onOpenChange(false);
-  }, [onOpenChange]);
+  }, [resetPreviewState, onOpenChange]);
 
   // ── Save a single blob to the DB ──────────────────────────────────────────
 
@@ -198,20 +171,12 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     });
   }, [label, category, createItem, queryClient, onCreated]);
 
-  // ── Single-file flow with BG removal preview ──────────────────────────────
+  // ── Encode + start BG removal for one file ────────────────────────────────
 
-  const handleFile = useCallback(async (file: File | Blob) => {
+  const processFile = useCallback(async (file: File | Blob) => {
     setErrorMsg(null);
-    const myGen = ++bgGenRef.current;
-    // Reset preview state
-    setOriginalBlob(null);
-    setOriginalUrl(null);
-    setCleanedBlob(null);
-    setCleanedUrl(null);
-    setBgFailed(false);
-    setBgProcessing(false);
-    setSelected("original");
-    // Show spinner immediately — encoding takes 1–3 s
+    resetPreviewState();
+    const myGen = bgGenRef.current; // resetPreviewState already bumped it
     setPhase("encoding");
 
     let jpeg: Blob;
@@ -225,7 +190,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     }
     if (bgGenRef.current !== myGen) return;
 
-    // Show original, switch to comparison screen
     setOriginalBlob(jpeg);
     setOriginalUrl(URL.createObjectURL(jpeg));
     setPhase("preview");
@@ -250,70 +214,58 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     } finally {
       if (bgGenRef.current === myGen) setBgProcessing(false);
     }
-  }, []);
+  }, [resetPreviewState]);
 
-  // ── Multi-file direct flow (no preview) ───────────────────────────────────
+  // ── Input handler — queue every pick ─────────────────────────────────────
 
-  const handleFiles = useCallback(async (files: File[]) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
     if (!files.length) return;
-    setErrorMsg(null);
-    setPhase("uploading");
-    setProgress({ current: 0, total: files.length });
+    setFileQueue(files);
+    setQueueIndex(0);
+    setSavedCount(0);
+    processFile(files[0]);
+  }, [processFile]);
 
-    let failed = 0;
-    for (let i = 0; i < files.length; i++) {
-      setProgress({ current: i + 1, total: files.length });
-      try {
-        const jpeg = await encodeForUpload(files[i]);
-        await saveBlobToDB(jpeg, existingCount + i);
-      } catch {
-        failed++;
-      }
-    }
-
-    setProgress(null);
-    if (failed > 0) {
-      setErrorMsg(`${failed} photo${failed > 1 ? "s" : ""} could not be saved. Please try again.`);
-      setPhase("pick");
-    } else {
-      handleClose();
-    }
-  }, [saveBlobToDB, existingCount, handleClose]);
-
-  // ── handleSave — called from preview screen ───────────────────────────────
+  // ── Save current preview → next in queue or close ────────────────────────
 
   const handleSave = useCallback(async () => {
     const blob = selected === "cleaned" && cleanedBlob ? cleanedBlob : originalBlob;
     if (!blob) return;
     setPhase("uploading");
     try {
-      await saveBlobToDB(blob, existingCount);
-      handleClose();
+      await saveBlobToDB(blob, existingCount + savedCount);
     } catch (err) {
       setErrorMsg(`Save failed: ${err instanceof Error ? err.message : String(err)}`);
       setPhase("preview");
+      return;
     }
-  }, [selected, cleanedBlob, originalBlob, saveBlobToDB, existingCount, handleClose]);
 
-  // ── Input handler — routes single vs multi ────────────────────────────────
+    const nextCount = savedCount + 1;
+    setSavedCount(nextCount);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    e.target.value = "";
-    if (!files.length) return;
-    if (files.length === 1) {
-      handleFile(files[0]);
+    const nextIndex = queueIndex + 1;
+    if (nextIndex < fileQueue.length) {
+      setQueueIndex(nextIndex);
+      processFile(fileQueue[nextIndex]);
     } else {
-      handleFiles(files);
+      handleClose();
     }
-  };
+  }, [
+    selected, cleanedBlob, originalBlob,
+    saveBlobToDB, existingCount, savedCount,
+    queueIndex, fileQueue,
+    processFile, handleClose,
+  ]);
 
   if (!open) return null;
 
+  const queueTotal   = fileQueue.length;
+  const showCounter  = queueTotal > 1;
+  const photoNumber  = queueIndex + 1;
+
   // ── Render ────────────────────────────────────────────────────────────────
-  // IMPORTANT: Do NOT wrap phase blocks in AnimatePresence — any AnimatePresence
-  // wrapper creates exit-animation windows where no child is mounted = blank screen.
-  // The outer motion.div slides the sheet in; inner phases use plain conditional divs.
 
   return (
     <motion.div
@@ -328,9 +280,16 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
       >
-        <h2 className="font-display font-bold text-xl uppercase tracking-tight">
-          Add {label}
-        </h2>
+        <div>
+          <h2 className="font-display font-bold text-xl uppercase tracking-tight leading-none">
+            Add {label}
+          </h2>
+          {showCounter && phase !== "pick" && (
+            <p className="text-xs font-bold text-black/40 uppercase tracking-widest mt-0.5">
+              Photo {photoNumber} of {queueTotal}
+            </p>
+          )}
+        </div>
         {(phase === "pick" || phase === "preview") && (
           <button
             onClick={handleClose}
@@ -343,7 +302,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         )}
       </div>
 
-      {/* ── Body — NO AnimatePresence here ─────────────────────────────────── */}
+      {/* ── Body — NO AnimatePresence on phase switches ─────────────────────── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto" }}>
 
         {/* ── PICK ── */}
@@ -417,7 +376,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
           </div>
         )}
 
-        {/* ── ENCODING — full-screen spinner shown immediately after pick ── */}
+        {/* ── ENCODING — shown immediately after pick ── */}
         {phase === "encoding" && (
           <div style={{
             flex: 1, display: "flex", flexDirection: "column",
@@ -555,7 +514,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
             {/* Action row */}
             <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
-              {/* Retake */}
+              {/* Retake / Back */}
               <button
                 onClick={() => { bgGenRef.current += 1; setBgProcessing(false); setPhase("pick"); }}
                 className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl
@@ -564,7 +523,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                            active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
               >
                 <RotateCcw className="w-4 h-4" />
-                Retake
+                {showCounter ? "Skip" : "Retake"}
               </button>
 
               {/* Save */}
@@ -577,7 +536,11 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                            active:translate-x-1 active:translate-y-1 active:shadow-none
                            disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {bgProcessing ? "Processing…" : "✓ Save to Locker"}
+                {bgProcessing
+                  ? "Processing…"
+                  : showCounter && photoNumber < queueTotal
+                    ? "✓ Save & Next"
+                    : "✓ Save to Locker"}
               </button>
             </div>
           </div>
@@ -595,11 +558,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             </div>
             <div className="text-center">
               <p className="font-display font-bold text-2xl uppercase tracking-tight">Saving…</p>
-              <p className="text-sm text-black/45 mt-1">
-                {progress && progress.total > 1
-                  ? `Photo ${progress.current} of ${progress.total}`
-                  : "Adding to your locker."}
-              </p>
+              <p className="text-sm text-black/45 mt-1">Adding to your locker.</p>
             </div>
           </div>
         )}
@@ -607,7 +566,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       </div>
 
       {/* ── Hidden file inputs ──────────────────────────────────────────────── */}
-      {/* Camera — single photo, native camera */}
       <input
         ref={cameraInputRef}
         type="file"
@@ -616,7 +574,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         className="hidden"
         onChange={handleInputChange}
       />
-      {/* Gallery — photo library / file picker, multiple allowed */}
       <input
         ref={galleryInputRef}
         type="file"
