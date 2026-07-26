@@ -2,13 +2,14 @@
  * ItemDetailsSheet — full-screen overlay showing a clothing item's details.
  * Every field is optional and editable. A "Save" button appears only when
  * the form is dirty. Delete is always available.
- * "Remove Background ✨" button lets users clean up photos of existing items.
+ *
+ * "✨ Clean Up Photo" opens PhotoCompareSheet for on-device background removal.
+ * The chosen image is written to local state immediately (optimistic) and the
+ * DB mutation fires in the background — no flash back to the old photo.
  */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  X, Heart, Trash2, Save, ChevronDown, Loader2, Check, RotateCcw,
-} from "lucide-react";
+import { X, Heart, Trash2, Save, ChevronDown } from "lucide-react";
 import {
   type ClothingItem,
   type ClothingItemUpdateCategory,
@@ -20,18 +21,13 @@ import {
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
-import {
-  removeBackground,
-  dataUrlToBlob,
-  blobToDataUrl as bgBlobToDataUrl,
-  blobToStorageDataUrl,
-} from "@/lib/backgroundRemoval";
+import { PhotoCompareSheet } from "./PhotoCompareSheet";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const SEASON_OPTIONS    = ["", "Spring", "Summer", "Fall", "Winter", "All Season"];
-const OCCASION_OPTIONS  = ["", "Casual", "Work", "Formal", "Sport", "Special Event"];
-const CATEGORY_OPTIONS  = ["outfits", "beauty", "toiletries", "essentials"];
+const SEASON_OPTIONS   = ["", "Spring", "Summer", "Fall", "Winter", "All Season"];
+const OCCASION_OPTIONS = ["", "Casual", "Work", "Formal", "Sport", "Special Event"];
+const CATEGORY_OPTIONS = ["outfits", "beauty", "toiletries", "essentials"];
 
 function Field({
   label, value, onChange, placeholder, type = "text",
@@ -87,8 +83,8 @@ function SelectField({
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface ItemDetailsSheetProps {
-  item:      ClothingItem | null;
-  onClose:   () => void;
+  item:       ClothingItem | null;
+  onClose:    () => void;
   onDeleted?: () => void;
 }
 
@@ -130,34 +126,27 @@ function isDirty(form: FormState, item: ClothingItem): boolean {
   );
 }
 
-// BG-removal state machine for the item photo
-type BgPhase = "idle" | "processing" | "preview";
-
 export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
-  const [form, setForm]                   = useState<FormState | null>(null);
+  const [form,             setForm]             = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [compareOpen,       setCompareOpen]       = useState(false);
 
-  // Background removal
-  const [bgPhase,      setBgPhase]      = useState<BgPhase>("idle");
-  const [cleanedUrl,   setCleanedUrl]   = useState<string | null>(null);
-  const [cleanedBlob,  setCleanedBlob]  = useState<Blob | null>(null);
-  const [bgError,      setBgError]      = useState<string | null>(null);
-  const bgGenRef = useRef(0);
+  /**
+   * Optimistic display URL — set immediately when the user confirms a choice in
+   * PhotoCompareSheet so the photo updates without waiting for the DB write.
+   * Reset to null whenever the active item changes.
+   */
+  const [displayImageUrl, setDisplayImageUrl] = useState<string | null>(null);
 
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
   const queryClient = useQueryClient();
 
-  // Reset form whenever item changes
   useEffect(() => {
     if (item) setForm(toForm(item));
     setShowDeleteConfirm(false);
-    // Also reset BG state on item change
-    bgGenRef.current += 1;
-    setBgPhase("idle");
-    setCleanedUrl(null);
-    setCleanedBlob(null);
-    setBgError(null);
+    setDisplayImageUrl(null);    // clear optimistic state for new item
+    setCompareOpen(false);
   }, [item?.id]);
 
   if (!item || !form) return null;
@@ -215,321 +204,246 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
     );
   };
 
-  // ── Background removal ──────────────────────────────────────────────────
+  // ── Photo compare confirm ───────────────────────────────────────────────
+  // Called by PhotoCompareSheet with the storage-ready data URL the user chose.
+  // 1. Update display immediately (optimistic — no flash).
+  // 2. Fire DB mutation in the background.
 
-  const handleRemoveBackground = async () => {
-    if (!item.imageObjectPath) return;
-    setBgError(null);
-    setBgPhase("processing");
-    const myGen = ++bgGenRef.current;
-    try {
-      const resultDataUrl  = await removeBackground(item.imageObjectPath);
-      if (bgGenRef.current !== myGen) return;
-      const resultBlob     = await dataUrlToBlob(resultDataUrl);
-      if (bgGenRef.current !== myGen) return;
-      const previewObjUrl  = URL.createObjectURL(resultBlob);
-      if (bgGenRef.current !== myGen) { URL.revokeObjectURL(previewObjUrl); return; }
-      setCleanedBlob(resultBlob);
-      setCleanedUrl(previewObjUrl);
-      setBgPhase("preview");
-    } catch (err) {
-      if (bgGenRef.current !== myGen) return;
-      console.warn("Background removal failed:", err);
-      setBgError("Could not remove background. Please try again.");
-      setBgPhase("idle");
-    }
+  const handlePhotoConfirm = (chosenDataUrl: string) => {
+    setDisplayImageUrl(chosenDataUrl);           // optimistic: update photo now
+    updateItem.mutate(                           // fire-and-forget write
+      { id: item.id, data: { imageObjectPath: chosenDataUrl } as Parameters<typeof updateItem.mutate>[0]["data"] },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+        },
+      }
+    );
   };
 
-  const handleDiscardCleaned = () => {
-    bgGenRef.current += 1;
-    setBgPhase("idle");
-    setCleanedUrl(null);
-    setCleanedBlob(null);
-    setBgError(null);
-  };
-
-  const handleApplyCleaned = () => {
-    if (!cleanedBlob) return;
-    blobToStorageDataUrl(cleanedBlob).then((dataUrl) => {
-      updateItem.mutate(
-        { id: item.id, data: { imageObjectPath: dataUrl } as Parameters<typeof updateItem.mutate>[0]["data"] },
-        {
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-            queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
-            queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
-            setBgPhase("idle");
-            setCleanedUrl(null);
-            setCleanedBlob(null);
-          },
-        }
-      );
-    });
-  };
-
-  // Decide which image to show in the photo area
-  const displayPhotoUrl =
-    bgPhase === "preview" && cleanedUrl
-      ? cleanedUrl
-      : getImageUrl(item.imageObjectPath);
-
+  // What to show in the photo slot: optimistic URL if set, otherwise stored URL
+  const shownPhotoUrl = displayImageUrl ?? getImageUrl(item.imageObjectPath);
   const hasPhoto = !!item.imageObjectPath;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: "100%" }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: "100%" }}
-      transition={{ type: "spring", damping: 28, stiffness: 240 }}
-      className="fixed inset-0 z-[65] flex flex-col max-w-md mx-auto bg-[#f9f4ee] overflow-y-auto"
-    >
-      {/* ── Header ── */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4
-                      bg-white border-b-2 border-black flex-shrink-0"
-        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}>
-        <h2 className="font-display font-bold text-xl uppercase tracking-tight">
-          Item Details
-        </h2>
-        <div className="flex items-center gap-2">
-          {/* Favourite toggle — saves instantly */}
-          <button
-            onClick={() => {
-              const next = !form.isFavorite;
-              patch("isFavorite")(next);
-              updateItem.mutate(
-                { id: item.id, data: { isFavorite: next } },
-                {
-                  onSuccess: () => {
-                    queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-                    queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
-                    queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
-                  },
-                }
-              );
-            }}
-            className={`w-9 h-9 border-2 border-black rounded-full flex items-center justify-center transition-all
-                        ${form.isFavorite
-                          ? "bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                          : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"}`}
-            title="Favourite"
-          >
-            <Heart
-              className="w-4 h-4"
-              fill={form.isFavorite ? "white" : "none"}
-              stroke={form.isFavorite ? "white" : "currentColor"}
-            />
-          </button>
-          {/* Close */}
-          <button
-            onClick={onClose}
-            className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
-                       bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                       active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Photo area ── */}
-      {hasPhoto && (
-        <div className="border-b-2 border-black flex-shrink-0">
-          {/* Image */}
-          <div
-            className="w-full h-52 relative"
-            style={{
-              background: bgPhase === "preview"
-                ? "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 12px 12px"
-                : "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%) 0 0 / 16px 16px",
-            }}
-          >
-            {displayPhotoUrl && (
-              <img
-                src={displayPhotoUrl}
-                alt={item.name}
-                className="w-full h-full object-contain"
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: "100%" }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 240 }}
+        className="fixed inset-0 z-[65] flex flex-col max-w-md mx-auto bg-[#f9f4ee] overflow-y-auto"
+      >
+        {/* ── Header ── */}
+        <div
+          className="sticky top-0 z-10 flex items-center justify-between px-4
+                     bg-white border-b-2 border-black flex-shrink-0"
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
+        >
+          <h2 className="font-display font-bold text-xl uppercase tracking-tight">
+            Item Details
+          </h2>
+          <div className="flex items-center gap-2">
+            {/* Favourite toggle — saves instantly */}
+            <button
+              onClick={() => {
+                const next = !form.isFavorite;
+                patch("isFavorite")(next);
+                updateItem.mutate(
+                  { id: item.id, data: { isFavorite: next } },
+                  {
+                    onSuccess: () => {
+                      queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+                      queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+                      queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+                    },
+                  }
+                );
+              }}
+              className={`w-9 h-9 border-2 border-black rounded-full flex items-center justify-center transition-all
+                          ${form.isFavorite
+                            ? "bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                            : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"}`}
+              title="Favourite"
+            >
+              <Heart
+                className="w-4 h-4"
+                fill={form.isFavorite ? "white" : "none"}
+                stroke={form.isFavorite ? "white" : "currentColor"}
               />
-            )}
-
-            {/* Processing overlay */}
-            {bgPhase === "processing" && (
-              <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-2">
-                <Loader2 className="w-8 h-8 animate-spin" strokeWidth={1.5} />
-                <p className="text-xs font-bold uppercase tracking-widest text-black/50">
-                  Removing background…
-                </p>
-              </div>
-            )}
-
-            {/* Preview badge */}
-            {bgPhase === "preview" && (
-              <div className="absolute top-2 left-2 px-2 py-0.5 bg-black text-white
-                              text-[10px] font-bold uppercase tracking-widest rounded-full">
-                Preview
-              </div>
-            )}
-          </div>
-
-          {/* Error */}
-          {bgError && (
-            <p className="text-xs text-red-600 text-center px-4 py-2 bg-red-50 border-t border-red-200">
-              {bgError}
-            </p>
-          )}
-
-          {/* BG removal controls — below image */}
-          {bgPhase === "idle" && (
-            <button
-              onClick={handleRemoveBackground}
-              className="w-full py-2.5 flex items-center justify-center gap-2
-                         text-xs font-bold uppercase tracking-wider text-black/60
-                         bg-white hover:bg-[#f9f4ee] transition-colors"
-            >
-              ✨ Remove Background
             </button>
-          )}
-
-          {bgPhase === "preview" && (
-            <div className="flex border-t-2 border-black">
-              <button
-                onClick={handleDiscardCleaned}
-                className="flex-1 py-2.5 flex items-center justify-center gap-1.5
-                           text-xs font-bold uppercase tracking-wider text-black/50
-                           bg-white border-r-2 border-black hover:bg-[#f9f4ee] transition-colors"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Keep Original
-              </button>
-              <button
-                onClick={handleApplyCleaned}
-                disabled={updateItem.isPending}
-                className="flex-1 py-2.5 flex items-center justify-center gap-1.5
-                           text-xs font-bold uppercase tracking-wider
-                           bg-black text-white hover:bg-black/80 transition-colors
-                           disabled:opacity-50"
-              >
-                <Check className="w-3.5 h-3.5" />
-                {updateItem.isPending ? "Saving…" : "✓ Apply"}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Form ── */}
-      <div className="flex-1 px-4 py-5 flex flex-col gap-4">
-
-        <Field
-          label="Item Name"
-          value={form.name}
-          onChange={patch("name") as (v: string) => void}
-          placeholder="e.g. White Linen Shirt"
-        />
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Brand" value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Nike, Zara…" />
-          <Field label="Color" value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
-        </div>
-
-        <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="30ml, 50ml, Full Size…" />
-
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField label="Season"   value={form.season}   onChange={patch("season") as (v: string) => void}   options={SEASON_OPTIONS} />
-          <SelectField label="Occasion" value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={OCCASION_OPTIONS} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Purchase Price" value={form.purchasePrice} onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
-          <Field label="Purchase Date"  value={form.purchaseDate}  onChange={patch("purchaseDate") as (v: string) => void}  type="date" />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
-            Notes
-          </label>
-          <textarea
-            value={form.notes}
-            onChange={(e) => patch("notes")(e.target.value)}
-            placeholder="Anything worth remembering…"
-            rows={3}
-            className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
-                       bg-white focus:outline-none focus:ring-2 focus:ring-primary resize-none
-                       placeholder:font-normal placeholder:text-black/25"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField
-            label="Category"
-            value={form.category}
-            onChange={patch("category") as (v: string) => void}
-            options={CATEGORY_OPTIONS}
-          />
-          <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
-            <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
-              {item.timesWorn ?? 0}
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* ── Footer actions ── */}
-      <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
-
-        {/* Save fields (only when dirty) */}
-        <AnimatePresence>
-          {dirty && (
-            <motion.button
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              onClick={handleSave}
-              disabled={updateItem.isPending}
-              className="w-full btn-brutalist py-3 rounded-xl flex items-center justify-center gap-2 text-sm"
-            >
-              <Save className="w-4 h-4" />
-              {updateItem.isPending ? "Saving…" : "Save Changes"}
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Delete */}
-        {!showDeleteConfirm ? (
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm
-                       font-bold uppercase border-2 border-black/20 text-black/35
-                       hover:border-red-500 hover:text-red-600 transition-all"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete from Locker Forever
-          </button>
-        ) : (
-          <div className="flex gap-2">
+            {/* Close */}
             <button
-              onClick={() => setShowDeleteConfirm(false)}
-              className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-black bg-white
-                         shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+              onClick={onClose}
+              className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
+                         bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
                          active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
             >
-              Cancel
+              <X className="w-4 h-4" />
             </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleteItem.isPending}
-              className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-red-600
-                         bg-red-500 text-white
-                         shadow-[2px_2px_0px_0px_rgba(185,28,28,1)]
-                         active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all
-                         disabled:opacity-50"
+          </div>
+        </div>
+
+        {/* ── Photo ── */}
+        {hasPhoto && (
+          <div className="border-b-2 border-black flex-shrink-0">
+            {/* Image — checkerboard handles PNG transparency for cleaned photos */}
+            <div
+              className="w-full h-52"
+              style={{
+                background: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%) 0 0 / 16px 16px",
+              }}
             >
-              {deleteItem.isPending ? "Deleting…" : "Yes, Delete Forever"}
+              {shownPhotoUrl && (
+                <img
+                  src={shownPhotoUrl}
+                  alt={item.name}
+                  className="w-full h-full object-contain"
+                />
+              )}
+            </div>
+
+            {/* Clean Up Photo button */}
+            <button
+              onClick={() => setCompareOpen(true)}
+              className="w-full py-2.5 flex items-center justify-center gap-2
+                         text-xs font-bold uppercase tracking-wider text-black/55
+                         bg-white hover:bg-[#f9f4ee] transition-colors"
+            >
+              ✨ Clean Up Photo
             </button>
           </div>
         )}
-      </div>
-    </motion.div>
+
+        {/* ── Form ── */}
+        <div className="flex-1 px-4 py-5 flex flex-col gap-4">
+
+          <Field
+            label="Item Name"
+            value={form.name}
+            onChange={patch("name") as (v: string) => void}
+            placeholder="e.g. White Linen Shirt"
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Brand" value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Nike, Zara…" />
+            <Field label="Color" value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
+          </div>
+
+          <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="30ml, 50ml, Full Size…" />
+
+          <div className="grid grid-cols-2 gap-3">
+            <SelectField label="Season"   value={form.season}   onChange={patch("season") as (v: string) => void}   options={SEASON_OPTIONS} />
+            <SelectField label="Occasion" value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={OCCASION_OPTIONS} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Purchase Price" value={form.purchasePrice} onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
+            <Field label="Purchase Date"  value={form.purchaseDate}  onChange={patch("purchaseDate") as (v: string) => void}  type="date" />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
+              Notes
+            </label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => patch("notes")(e.target.value)}
+              placeholder="Anything worth remembering…"
+              rows={3}
+              className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
+                         bg-white focus:outline-none focus:ring-2 focus:ring-primary resize-none
+                         placeholder:font-normal placeholder:text-black/25"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <SelectField
+              label="Category"
+              value={form.category}
+              onChange={patch("category") as (v: string) => void}
+              options={CATEGORY_OPTIONS}
+            />
+            <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
+              <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
+                {item.timesWorn ?? 0}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ── Footer actions ── */}
+        <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
+
+          {/* Save fields (only when dirty) */}
+          <AnimatePresence>
+            {dirty && (
+              <motion.button
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                onClick={handleSave}
+                disabled={updateItem.isPending}
+                className="w-full btn-brutalist py-3 rounded-xl flex items-center justify-center gap-2 text-sm"
+              >
+                <Save className="w-4 h-4" />
+                {updateItem.isPending ? "Saving…" : "Save Changes"}
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {/* Delete */}
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm
+                         font-bold uppercase border-2 border-black/20 text-black/35
+                         hover:border-red-500 hover:text-red-600 transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete from Locker Forever
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-black bg-white
+                           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteItem.isPending}
+                className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-red-600
+                           bg-red-500 text-white
+                           shadow-[2px_2px_0px_0px_rgba(185,28,28,1)]
+                           active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all
+                           disabled:opacity-50"
+              >
+                {deleteItem.isPending ? "Deleting…" : "Yes, Delete Forever"}
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* ── Photo compare overlay (z-[75], above this sheet) ── */}
+      <AnimatePresence>
+        {compareOpen && item.imageObjectPath && (
+          <PhotoCompareSheet
+            open={compareOpen}
+            onOpenChange={setCompareOpen}
+            originalDataUrl={item.imageObjectPath}
+            onConfirm={handlePhotoConfirm}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
