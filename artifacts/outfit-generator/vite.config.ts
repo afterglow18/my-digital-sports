@@ -48,7 +48,11 @@ export default defineConfig({
       : []),
   ],
   optimizeDeps: {
-    exclude: ['@imgly/background-removal'],
+    // Exclude both the imgly library and its onnxruntime-web peer from Vite's
+    // pre-bundler. onnxruntime-web must be a dynamic import at runtime (see
+    // backgroundRemoval.ts) — pre-bundling it causes a mid-session page reload
+    // that corrupts React's internal dispatcher.
+    exclude: ['@imgly/background-removal', 'onnxruntime-web'],
   },
   resolve: {
     alias: {

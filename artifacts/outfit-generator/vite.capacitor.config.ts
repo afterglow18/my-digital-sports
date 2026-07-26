@@ -18,7 +18,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
 
   optimizeDeps: {
-    exclude: ['@imgly/background-removal'],
+    exclude: ['@imgly/background-removal', 'onnxruntime-web'],
   },
 
   resolve: {
