@@ -50,26 +50,26 @@ const ROWS: { key: RowKey; btnLabel: string }[] = [
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
-const IMG_W = 1046;
-const IMG_H = 1503;
+const IMG_W = 1024;
+const IMG_H = 1536;
 const NAV_H = 90;
 
-// ── Landmark fractions (calibrated for sports-bleachers-bg.png 1046×1503) ─────
-// Sports bleachers scene — 4 rows labelled GEAR / EQUIPMENT / TEAM / MEMORABILIA.
-// Title "MY DIGITAL SPORTS" is baked into the top ~28% of the image.
-// Bottom bar (PAW | SAVE SPORTS | BONE) occupies y ≈ 0.855 → 1.000.
+// ── Landmark fractions (calibrated for sports-bleachers-bg.png 1024×1536) ─────
+// Stadium scene — 4 empty colored panels: blue / green / purple / gold.
+// Title "MY DIGITAL SPORTS" is baked into the top ~20% of the image.
+// Bottom bar (football | SAVE SPORTS | baseball) occupies y ≈ 0.897 → 1.000.
 const LM = {
-  doorL: 0.02,   // left edge of bleacher content
-  doorR: 0.98,   // right edge of bleacher content
+  doorL: 0.025,  // left edge of panels
+  doorR: 0.975,  // right edge of panels
 
   rows: [
-    { sectionTop: 0.332, shelfY: 0.455, btnCY: 0.375 },  // GEAR       (bleacher row 1)
-    { sectionTop: 0.455, shelfY: 0.580, btnCY: 0.505 },  // EQUIPMENT  (bleacher row 2)
-    { sectionTop: 0.580, shelfY: 0.705, btnCY: 0.630 },  // TEAM       (bleacher row 3)
-    { sectionTop: 0.705, shelfY: 0.832, btnCY: 0.755 },  // MEMORABILIA (bleacher row 4)
+    { sectionTop: 0.202, shelfY: 0.375, btnCY: 0.290 },  // blue   panel (row 1)
+    { sectionTop: 0.387, shelfY: 0.550, btnCY: 0.470 },  // green  panel (row 2)
+    { sectionTop: 0.562, shelfY: 0.720, btnCY: 0.642 },  // purple panel (row 3)
+    { sectionTop: 0.728, shelfY: 0.882, btnCY: 0.807 },  // gold   panel (row 4)
   ],
 
-  saveAreaY: 0.858,
+  saveAreaY: 0.900,
 } as const;
 
 // ── useImageRect ─────────────────────────────────────────────────────────────
@@ -240,7 +240,7 @@ export default function WardrobePage() {
               aria-label={`${totalItems} of ${FREE_ITEM_LIMIT} items used — tap to upgrade`}
               style={{
                 position: "absolute",
-                top: pY(ir, 0.298), left: "50%", transform: "translateX(-50%)",
+                top: pY(ir, 0.185), left: "50%", transform: "translateX(-50%)",
                 zIndex: 25,
                 padding: "3px 14px", borderRadius: 20, border: "none",
                 background: totalItems >= FREE_ITEM_LIMIT
@@ -347,17 +347,17 @@ export default function WardrobePage() {
           })}
 
 
-          {/* ── PAW icon tap zone (left) → saved looks ── */}
+          {/* ── Football icon tap zone (left) → saved looks ── */}
           <button
             onClick={() => navigate("/favorites")}
             data-testid="button-person-icon"
             aria-label="View saved looks"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.870),
-              left:   pX(ir, 0.04),
-              width:  pW(ir, 0.230),
-              height: pH(ir, 0.110),
+              top:    pY(ir, 0.895),
+              left:   pX(ir, 0.02),
+              width:  pW(ir, 0.195),
+              height: pH(ir, 0.088),
               zIndex: 25,
               background: "transparent",
               border: "none",
@@ -365,16 +365,16 @@ export default function WardrobePage() {
             }}
           />
 
-          {/* ── BONE icon tap zone (right) → upgrade sheet ── */}
+          {/* ── Baseball icon tap zone (right) → upgrade sheet ── */}
           <button
             onClick={() => setUpgradeReason("items")}
             aria-label="Upgrade to premium"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.870),
-              left:   pX(ir, 0.730),
-              width:  pW(ir, 0.230),
-              height: pH(ir, 0.110),
+              top:    pY(ir, 0.895),
+              left:   pX(ir, 0.785),
+              width:  pW(ir, 0.195),
+              height: pH(ir, 0.088),
               zIndex: 25,
               background: "transparent",
               border: "none",
@@ -388,10 +388,10 @@ export default function WardrobePage() {
             aria-label="Save current locker"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.875),
-              left:   pX(ir, 0.280),
-              width:  pW(ir, 0.440),
-              height: pH(ir, 0.095),
+              top:    pY(ir, 0.897),
+              left:   pX(ir, 0.225),
+              width:  pW(ir, 0.550),
+              height: pH(ir, 0.084),
               borderRadius: 28,
               zIndex: 26,
               background: "transparent",
