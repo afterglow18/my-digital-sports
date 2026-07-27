@@ -74,10 +74,10 @@ async function encodeForUpload(input: File | Blob): Promise<Blob> {
 // ── Category metadata ─────────────────────────────────────────────────────────
 
 const PHOTO_TIPS = [
-  "Photograph individual products or bundle multiple items together.",
-  "Lay everything flat on a plain background.",
-  "Take the photo from directly above.",
-  "Keep all items fully in frame.",
+  "Photograph one sports item, team photo, or document at a time.",
+  "Place the item on a clean, uncluttered background.",
+  "Take the photo from directly above or straight on.",
+  "Keep the entire item fully in frame.",
 ] as const;
 
 const CATEGORY_EXAMPLES: Record<string, { emoji: string; items: string[] }> = {
