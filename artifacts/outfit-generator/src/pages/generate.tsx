@@ -23,8 +23,8 @@ import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
 import { useQueryClient } from "@tanstack/react-query";
 
 // ── Layout constants (same as wardrobe.tsx) ───────────────────────────────────
-const IMG_W = 1024;
-const IMG_H = 1536;
+const IMG_W = 853;
+const IMG_H = 1844;
 const NAV_H = 90;
 const PINK  = "#E8D4B0";
 
@@ -32,13 +32,13 @@ const LM = {
   doorL: 0.025,
   doorR: 0.975,
   rows: [
-    { sectionTop: 0.202, shelfY: 0.375, btnCY: 0.290 },  // blue   panel (row 1)
-    { sectionTop: 0.387, shelfY: 0.550, btnCY: 0.470 },  // green  panel (row 2)
-    { sectionTop: 0.562, shelfY: 0.720, btnCY: 0.642 },  // purple panel (row 3)
-    { sectionTop: 0.728, shelfY: 0.882, btnCY: 0.807 },  // gold   panel (row 4)
+    { sectionTop: 0.218, shelfY: 0.374, btnCY: 0.297 },  // blue   panel (row 1)
+    { sectionTop: 0.383, shelfY: 0.537, btnCY: 0.461 },  // green  panel (row 2)
+    { sectionTop: 0.546, shelfY: 0.698, btnCY: 0.623 },  // purple panel (row 3)
+    { sectionTop: 0.707, shelfY: 0.854, btnCY: 0.782 },  // gold   panel (row 4)
   ],
-  // Action bar: bottom bar (football | SAVE SPORTS | baseball)
-  barY:   0.900,
+  // Action bar: bottom bar (football | SAVE | baseball)
+  barY:   0.882,
   barBot: 1.000,
 } as const;
 
@@ -270,7 +270,7 @@ export default function GeneratePage() {
             {/* MATCHMAKER label: position below the baked-in title area */}
             <div style={{
               position: "absolute",
-              top: pY(ir, 0.185),
+              top: pY(ir, 0.200),
               left: 8,
               right: 8,
               zIndex: 25,
