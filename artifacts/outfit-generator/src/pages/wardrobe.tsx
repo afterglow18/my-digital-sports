@@ -50,27 +50,26 @@ const ROWS: { key: RowKey; btnLabel: string }[] = [
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
-const IMG_W = 1024;
-const IMG_H = 1536;
+const IMG_W = 1046;
+const IMG_H = 1503;
 const NAV_H = 90;
 
-// ── Landmark fractions (calibrated for suitcase-open-bg.jpg 989×1536) ─────────
-// Real-photo suitcase, shot from above.
-// Lid interior:  y ≈ 0.05 → 0.38   (rows 1 & 2)
-// Main body:     y ≈ 0.42 → 0.80   (rows 3 & 4)
-// doorL/doorR:   left/right inner walls of the suitcase interior
+// ── Landmark fractions (calibrated for sports-bleachers-bg.png 1046×1503) ─────
+// Sports bleachers scene — 4 rows labelled GEAR / EQUIPMENT / TEAM / MEMORABILIA.
+// Title "MY DIGITAL SPORTS" is baked into the top ~28% of the image.
+// Bottom bar (PAW | SAVE SPORTS | BONE) occupies y ≈ 0.855 → 1.000.
 const LM = {
-  doorL: 0.182,  // inner left wall
-  doorR: 0.776,  // inner right wall
+  doorL: 0.02,   // left edge of bleacher content
+  doorR: 0.98,   // right edge of bleacher content
 
   rows: [
-    { sectionTop: 0.170, shelfY: 0.265, btnCY: 0.150 },  // OUTFITS  (lid, upper)
-    { sectionTop: 0.305, shelfY: 0.400, btnCY: 0.285 },  // BEAUTY   (lid, lower)
-    { sectionTop: 0.505, shelfY: 0.618, btnCY: 0.485 },  // TOILETRIES (body, upper)
-    { sectionTop: 0.660, shelfY: 0.770, btnCY: 0.640 },  // ESSENTIALS (body, lower)
+    { sectionTop: 0.332, shelfY: 0.455, btnCY: 0.375 },  // GEAR       (bleacher row 1)
+    { sectionTop: 0.455, shelfY: 0.580, btnCY: 0.505 },  // EQUIPMENT  (bleacher row 2)
+    { sectionTop: 0.580, shelfY: 0.705, btnCY: 0.630 },  // TEAM       (bleacher row 3)
+    { sectionTop: 0.705, shelfY: 0.832, btnCY: 0.755 },  // MEMORABILIA (bleacher row 4)
   ],
 
-  saveAreaY: 0.84,
+  saveAreaY: 0.858,
 } as const;
 
 // ── useImageRect ─────────────────────────────────────────────────────────────
@@ -209,12 +208,12 @@ export default function WardrobePage() {
         width: "100%",
         height: "calc(100dvh - var(--app-nav-h, 90px))",
         overflow: "hidden",
-        background: "#C8B9A2",
+        background: "#0e1a2e",
       }}
     >
-      {/* ── Background image — object-fit:cover avoids WebKit negative-left clipping bug ── */}
+      {/* ── Background image ── */}
       <img
-        src="/suitcase-open-bg.jpg"
+        src="/sports-bleachers-bg.png"
         alt="My Digital Sports"
         style={{
           position: "absolute",
@@ -231,30 +230,7 @@ export default function WardrobePage() {
 
       {ready && (
         <>
-          {/* ── Page title ── */}
-          <div style={{
-            position: "absolute",
-            top: pY(ir, 0.090),
-            left: 8,
-            right: 8,
-            zIndex: 25,
-            textAlign: "center",
-            pointerEvents: "none",
-            overflow: "hidden",
-          }}>
-            <div style={{
-              fontFamily: "var(--font-display, serif)",
-              fontWeight: 900,
-              fontSize: Math.max(8, Math.min(pW(ir, 0.030), ir.containerW * 0.040)),
-              letterSpacing: "0.08em",
-              whiteSpace: "nowrap",
-              textTransform: "uppercase",
-              color: "#1a0800",
-              lineHeight: 1.1,
-            }}>
-              MY DIGITAL SPORTS
-            </div>
-          </div>
+          {/* ── Page title — hidden; baked into sports-bleachers-bg.png ── */}
 
           {/* ── Item-count badge (free tier) ── */}
           {itemsLeft !== null && (
@@ -264,7 +240,7 @@ export default function WardrobePage() {
               aria-label={`${totalItems} of ${FREE_ITEM_LIMIT} items used — tap to upgrade`}
               style={{
                 position: "absolute",
-                top: pY(ir, 0.108), left: "50%", transform: "translateX(-50%)",
+                top: pY(ir, 0.298), left: "50%", transform: "translateX(-50%)",
                 zIndex: 25,
                 padding: "3px 14px", borderRadius: 20, border: "none",
                 background: totalItems >= FREE_ITEM_LIMIT
@@ -302,7 +278,7 @@ export default function WardrobePage() {
             return (
               <React.Fragment key={key}>
 
-                {/* ── Category label (tappable → add photo) ── */}
+                {/* ── Category label tap zone — labels baked into image; keep click zone ── */}
                 <button
                   onClick={addHandlers[key]}
                   aria-label={btnLabel}
@@ -313,24 +289,12 @@ export default function WardrobePage() {
                     width: carW,
                     transform: "translateY(-50%)",
                     zIndex: 23,
-                    textAlign: "center",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
                     padding: 0,
                   }}
-                >
-                  <span style={{
-                    fontSize: Math.max(9, pH(ir, 0.013)),
-                    fontWeight: 800,
-                    letterSpacing: "0.12em",
-                    color: "#3A2210",
-                    fontFamily: "var(--font-display)",
-                    textTransform: "uppercase",
-                  }}>
-                    {btnLabel}
-                  </span>
-                </button>
+                />
 
                 {/* ── Item carousel — fills the section between buttons ── */}
                 {items.length > 0 && (
@@ -383,17 +347,17 @@ export default function WardrobePage() {
           })}
 
 
-          {/* ── Person icon tap zone ── */}
+          {/* ── PAW icon tap zone (left) → saved looks ── */}
           <button
             onClick={() => navigate("/favorites")}
             data-testid="button-person-icon"
             aria-label="View saved looks"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.895),
-              left:   pX(ir, 0.115),
-              width:  pW(ir, 0.170),
-              height: pH(ir, 0.080),
+              top:    pY(ir, 0.870),
+              left:   pX(ir, 0.04),
+              width:  pW(ir, 0.230),
+              height: pH(ir, 0.110),
               zIndex: 25,
               background: "transparent",
               border: "none",
@@ -401,16 +365,16 @@ export default function WardrobePage() {
             }}
           />
 
-          {/* ── Lipstick icon tap zone — opens premium upgrade sheet ── */}
+          {/* ── BONE icon tap zone (right) → upgrade sheet ── */}
           <button
             onClick={() => setUpgradeReason("items")}
             aria-label="Upgrade to premium"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.905),
-              left:   pX(ir, 0.755),
-              width:  pW(ir, 0.110),
-              height: pH(ir, 0.065),
+              top:    pY(ir, 0.870),
+              left:   pX(ir, 0.730),
+              width:  pW(ir, 0.230),
+              height: pH(ir, 0.110),
               zIndex: 25,
               background: "transparent",
               border: "none",
@@ -418,34 +382,23 @@ export default function WardrobePage() {
             }}
           />
 
-          {/* ── SAVE circular button — covers the baked-in circle ── */}
+          {/* ── SAVE SPORTS button — covers the baked-in navy button ── */}
           <button
             onClick={() => { setSaveName(""); setIsSaveOpen(true); }}
-            aria-label="Save current case"
+            aria-label="Save current locker"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.9466) - pW(ir, 0.074),
-              left:   pX(ir, 0.500)  - pW(ir, 0.074),
-              width:  pW(ir, 0.148),
-              height: pW(ir, 0.148),
-              borderRadius: "50%",
+              top:    pY(ir, 0.875),
+              left:   pX(ir, 0.280),
+              width:  pW(ir, 0.440),
+              height: pH(ir, 0.095),
+              borderRadius: 28,
               zIndex: 26,
-              background: "linear-gradient(160deg, #E8D4B0 0%, #B8894E 100%)",
-              border: "2px solid #B8894E",
-              boxShadow: "0 2px 8px rgba(120,80,40,0.25)",
+              background: "transparent",
+              border: "none",
               cursor: "pointer",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 0,
-              lineHeight: 1.15,
-              padding: 0,
             }}
-          >
-            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#3A2210", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
-            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#3A2210", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>CASE 🤎</span>
-          </button>
+          />
         </>
       )}
 
@@ -478,12 +431,12 @@ export default function WardrobePage() {
               {saveSuccess ? (
                 <div style={{ textAlign: "center", padding: "12px 0" }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>💕</div>
-                  <p style={{ fontWeight: 800, fontSize: 16, fontFamily: "var(--font-display)" }}>Case saved!</p>
+                  <p style={{ fontWeight: 800, fontSize: 16, fontFamily: "var(--font-display)" }}>Locker saved! 🏆</p>
                 </div>
               ) : (
                 <>
                   <p style={{ fontWeight: 800, fontSize: 15, fontFamily: "var(--font-display)", marginBottom: 12 }}>
-                    Name this case
+                    Name this locker
                   </p>
                   <input
                     autoFocus
