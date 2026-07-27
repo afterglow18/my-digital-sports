@@ -4,6 +4,29 @@ import { Shirt, Sparkles, Bookmark, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetWardrobeStats } from "@/hooks/useLocalDB";
 
+/** Shirt icon with jersey number 25 overlaid in the centre */
+function JerseyIcon({ className, strokeWidth }: { className?: string; strokeWidth?: number }) {
+  return (
+    <span className="relative inline-flex items-center justify-center">
+      <Shirt className={className} strokeWidth={strokeWidth} />
+      <span
+        style={{
+          position: "absolute",
+          fontSize: "0.42em",
+          fontWeight: 900,
+          lineHeight: 1,
+          letterSpacing: "-0.03em",
+          userSelect: "none",
+          pointerEvents: "none",
+          marginTop: "0.15em",
+        }}
+      >
+        25
+      </span>
+    </span>
+  );
+}
+
 interface AppLayoutProps {
   children: React.ReactNode;
 }
@@ -43,12 +66,13 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="w-11 h-11 rounded-xl border-[3px] border-black bg-primary
                         flex items-center justify-center mb-4 flex-shrink-0
                         shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-          <Shirt className="w-5 h-5 text-black" strokeWidth={2.5} />
+          <JerseyIcon className="w-5 h-5 text-black" strokeWidth={2.5} />
         </div>
 
         {navItems.map((item) => {
           const isActive = location === item.href;
           const Icon = item.icon;
+          const isLocker = item.href === "/";
           return (
             <Link
               key={item.href}
@@ -63,6 +87,15 @@ export function AppLayout({ children }: AppLayoutProps) {
                     : "bg-transparent border-transparent group-hover:bg-muted group-active:scale-95"
                 )}
               >
+                {isLocker ? (
+                  <JerseyIcon
+                    className={cn(
+                      "w-5 h-5",
+                      isActive ? "text-black" : "text-muted-foreground"
+                    )}
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                ) : (
                 <Icon
                   className={cn(
                     "w-5 h-5",
@@ -71,6 +104,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   )}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
+                )}
                 {item.badge !== undefined && item.badge > 0 && (
                   <div className="absolute -top-1.5 -right-1.5 bg-secondary text-black
                                   text-[9px] font-bold border-2 border-black w-[18px] h-[18px]
@@ -118,6 +152,15 @@ export function AppLayout({ children }: AppLayoutProps) {
                           : "bg-transparent border-transparent group-hover:bg-muted group-active:scale-95"
                       )}
                     >
+                      {item.href === "/" ? (
+                        <JerseyIcon
+                          className={cn(
+                            "w-6 h-6",
+                            isActive ? "text-black" : "text-muted-foreground"
+                          )}
+                          strokeWidth={isActive ? 2.5 : 2}
+                        />
+                      ) : (
                       <Icon
                         className={cn(
                           "w-6 h-6",
@@ -126,6 +169,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                         )}
                         strokeWidth={isActive ? 2.5 : 2}
                       />
+                      )}
                       {item.badge !== undefined && item.badge > 0 && (
                         <div className="absolute -top-2 -right-2 bg-secondary text-black text-[10px] font-bold border-2 border-black w-5 h-5 flex items-center justify-center rounded-full shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
                           {item.badge > 99 ? "99+" : item.badge}
