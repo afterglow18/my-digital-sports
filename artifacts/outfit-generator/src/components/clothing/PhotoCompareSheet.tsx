@@ -281,10 +281,10 @@ export function PhotoCompareSheet({ open, onOpenChange, originalDataUrl, onConfi
             </button>
           </div>
 
-          {/* Save button — always enabled; saves original immediately if tapped before cleaned is ready */}
+          {/* Save button — enabled as soon as chosen version is ready */}
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || (selected === "cleaned" && !cleanedUrl)}
             className="w-full py-4 rounded-2xl border-4 border-black font-display font-bold
                        text-base uppercase tracking-tight bg-black text-white
                        shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
@@ -293,9 +293,11 @@ export function PhotoCompareSheet({ open, onOpenChange, originalDataUrl, onConfi
           >
             {saving
               ? "Saving…"
-              : selected === "cleaned"
-                ? "Save Cleaned Version"
-                : "Save Original"}
+              : selected === "cleaned" && !cleanedUrl
+                ? "Processing…"
+                : selected === "cleaned"
+                  ? "Save Cleaned Version"
+                  : "Save Original"}
           </button>
 
           {/* Cancel */}

@@ -526,17 +526,17 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 {showCounter ? "Skip" : "Retake"}
               </button>
 
-              {/* Save */}
+              {/* Save — enabled as soon as the chosen version is ready */}
               <button
                 onClick={handleSave}
-                disabled={bgProcessing}
+                disabled={selected === "cleaned" ? !cleanedUrl : !originalBlob}
                 className="flex-1 py-3 rounded-2xl border-4 border-black font-display font-bold
                            text-base uppercase tracking-tight bg-black text-white
                            shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
                            active:translate-x-1 active:translate-y-1 active:shadow-none
                            disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {bgProcessing
+                {selected === "cleaned" && !cleanedUrl
                   ? "Processing…"
                   : showCounter && photoNumber < queueTotal
                     ? "✓ Save & Next"
