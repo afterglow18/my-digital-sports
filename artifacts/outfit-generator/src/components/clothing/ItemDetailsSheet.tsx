@@ -226,6 +226,9 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   // What to show in the photo slot: optimistic URL if set, otherwise stored URL
   const shownPhotoUrl = displayImageUrl ?? getImageUrl(item.imageObjectPath);
   const hasPhoto = !!item.imageObjectPath;
+  // Cleaned photos are always stored as PNG (via blobToStorageDataUrl).
+  // Originals stay JPEG. Hide the cleanup button once a photo has been cleaned.
+  const isAlreadyCleaned = (displayImageUrl ?? item.imageObjectPath ?? "").startsWith("data:image/png");
 
   return (
     <>
@@ -305,15 +308,17 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               )}
             </div>
 
-            {/* Clean Up Photo button */}
-            <button
-              onClick={() => setCompareOpen(true)}
-              className="w-full py-2.5 flex items-center justify-center gap-2
-                         text-xs font-bold uppercase tracking-wider text-black/55
-                         bg-white hover:bg-[#f9f4ee] transition-colors"
-            >
-              ✨ Clean Up Photo
-            </button>
+            {/* Clean Up Photo button — hidden once already cleaned */}
+            {!isAlreadyCleaned && (
+              <button
+                onClick={() => setCompareOpen(true)}
+                className="w-full py-2.5 flex items-center justify-center gap-2
+                           text-xs font-bold uppercase tracking-wider text-black/55
+                           bg-white hover:bg-[#f9f4ee] transition-colors"
+              >
+                ✨ Clean Up Photo
+              </button>
+            )}
           </div>
         )}
 
