@@ -463,7 +463,7 @@ export default function WardrobePage() {
                     value={saveName}
                     onChange={e => setSaveName(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && saveName.trim() && handleSave()}
-                    placeholder="e.g. Sunday Glow ✨"
+                    placeholder="e.g. Soccer, Basketball…"
                     style={{
                       width: "100%", height: 42, borderRadius: 10,
                       border: "2px solid #000", padding: "0 12px",

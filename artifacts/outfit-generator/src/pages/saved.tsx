@@ -22,10 +22,10 @@ const SLOT_ORDER = ["outfits", "beauty", "toiletries", "essentials"] as const;
 type SlotKey = (typeof SLOT_ORDER)[number];
 
 const SLOT_LABELS: Record<SlotKey, string> = {
-  outfits:    "Outfits",
-  beauty:     "Beauty",
-  toiletries: "Toiletries",
-  essentials: "Essentials",
+  outfits:    "Gear",
+  beauty:     "Equipment",
+  toiletries: "Teams",
+  essentials: "Memorabilia",
 };
 
 function ItemPhoto({
@@ -162,9 +162,9 @@ export default function SavedPage() {
   return (
     <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10 relative">
       <header className="mb-6">
-        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">Lookbook</h1>
+        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">My Lineup</h1>
         <div className="flex items-center justify-between">
-          <p className="font-medium text-muted-foreground text-sm">Hall of fame.</p>
+          <p className="font-medium text-muted-foreground text-sm">Your saved collections.</p>
 
           {isFree && outfitCount > 0 && (
             <button
@@ -192,11 +192,11 @@ export default function SavedPage() {
                      shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
         >
           <p className="font-display font-bold text-sm uppercase tracking-tight">
-            🔓 Lookbook is full
+            🔓 Lineup is full
           </p>
           <p className="text-xs text-black/60 mt-1 mb-3 leading-snug">
-            You've saved {FREE_OUTFIT_LIMIT} looks — the free limit.
-            Unlock Forever to save unlimited cases.
+            You've saved {FREE_OUTFIT_LIMIT} collections — the free limit.
+            Unlock Forever to save unlimited lineups.
           </p>
           <button
             onClick={() => setShowUpgrade(true)}
