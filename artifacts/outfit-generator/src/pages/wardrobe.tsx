@@ -246,7 +246,7 @@ export default function WardrobePage() {
                 top: pY(ir, 0.178), left: "50%", transform: "translateX(-50%)",
                 zIndex: 25,
                 padding: "2px 10px", borderRadius: 20, border: "none",
-                background: "rgba(255,255,255,0.82)",
+                background: "#ffffff",
                 boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
                 color: totalItems >= FREE_ITEM_LIMIT ? "#cc0000" : "#1a5a8a",
                 textShadow: "none",
