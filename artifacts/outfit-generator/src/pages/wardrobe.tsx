@@ -64,10 +64,10 @@ const LM = {
   doorR: 0.980,  // right edge of panels
 
   rows: [
-    { sectionTop: 0.185, shelfY: 0.342, btnCY: 0.350 },  // GEAR        panel (row 1)
-    { sectionTop: 0.372, shelfY: 0.526, btnCY: 0.535 },  // EQUIPMENT   panel (row 2)
-    { sectionTop: 0.558, shelfY: 0.712, btnCY: 0.720 },  // TEAMS       panel (row 3)
-    { sectionTop: 0.738, shelfY: 0.860, btnCY: 0.867 },  // MEMORABILIA panel (row 4)
+    { sectionTop: 0.205, shelfY: 0.362, btnCY: 0.370 },  // GEAR        panel (row 1)
+    { sectionTop: 0.392, shelfY: 0.546, btnCY: 0.555 },  // EQUIPMENT   panel (row 2)
+    { sectionTop: 0.578, shelfY: 0.732, btnCY: 0.740 },  // TEAMS       panel (row 3)
+    { sectionTop: 0.758, shelfY: 0.875, btnCY: 0.882 },  // MEMORABILIA panel (row 4)
   ],
 
   saveAreaY: 0.885,
