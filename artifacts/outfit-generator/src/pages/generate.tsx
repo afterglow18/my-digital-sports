@@ -24,22 +24,22 @@ import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
 import { useQueryClient } from "@tanstack/react-query";
 
 // ── Layout constants (same as wardrobe.tsx) ───────────────────────────────────
-const IMG_W = 853;
-const IMG_H = 1844;
+const IMG_W = 1024;
+const IMG_H = 1536;
 const NAV_H = 90;
 const PINK  = "#B8E0F5";
 
 const LM = {
-  doorL: 0.025,
-  doorR: 0.975,
+  doorL: 0.020,
+  doorR: 0.980,
   rows: [
-    { sectionTop: 0.218, shelfY: 0.374, btnCY: 0.297 },  // blue   panel (row 1)
-    { sectionTop: 0.383, shelfY: 0.537, btnCY: 0.461 },  // green  panel (row 2)
-    { sectionTop: 0.546, shelfY: 0.698, btnCY: 0.623 },  // purple panel (row 3)
-    { sectionTop: 0.707, shelfY: 0.854, btnCY: 0.782 },  // gold   panel (row 4)
+    { sectionTop: 0.185, shelfY: 0.342, btnCY: 0.350 },  // GEAR        panel (row 1)
+    { sectionTop: 0.372, shelfY: 0.526, btnCY: 0.535 },  // EQUIPMENT   panel (row 2)
+    { sectionTop: 0.558, shelfY: 0.712, btnCY: 0.720 },  // TEAMS       panel (row 3)
+    { sectionTop: 0.738, shelfY: 0.860, btnCY: 0.867 },  // MEMORABILIA panel (row 4)
   ],
   // Action bar: bottom bar (football | SAVE | baseball)
-  barY:   0.882,
+  barY:   0.885,
   barBot: 1.000,
 } as const;
 
@@ -306,7 +306,7 @@ export default function GeneratePage() {
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
-              const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+              const labelY = pY(ir, lm.sectionTop + 0.018);
               const labelFs = Math.max(9, pH(ir, 0.013));
 
               return (

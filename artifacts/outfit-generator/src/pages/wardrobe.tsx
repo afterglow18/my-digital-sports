@@ -51,26 +51,26 @@ const ROWS: { key: RowKey }[] = [
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
-const IMG_W = 853;
-const IMG_H = 1844;
+const IMG_W = 1024;
+const IMG_H = 1536;
 const NAV_H = 90;
 
-// ── Landmark fractions (calibrated for sports-bleachers-bg.png 853×1844) ──────
-// Stadium scene — 4 empty colored panels: blue / green / purple / gold.
-// Title "MY DIGITAL SPORTS" is baked into the top ~22% of the image.
-// Bottom bar (football | SAVE | baseball) occupies y ≈ 0.879 → 0.980.
+// ── Landmark fractions (calibrated for sports-hero.png 1024×1536) ─────────────
+// 4 coloured panels: GEAR (blue) / EQUIPMENT (green) / TEAMS (purple) / MEMORABILIA (gold).
+// Logo "MY DIGITAL SPORTS" occupies the top ~18% of the image.
+// Bottom bar (football | SAVE | baseball) occupies y ≈ 0.885 → 1.000.
 const LM = {
-  doorL: 0.025,  // left edge of panels
-  doorR: 0.975,  // right edge of panels
+  doorL: 0.020,  // left edge of panels
+  doorR: 0.980,  // right edge of panels
 
   rows: [
-    { sectionTop: 0.218, shelfY: 0.374, btnCY: 0.297 },  // blue   panel (row 1)
-    { sectionTop: 0.383, shelfY: 0.537, btnCY: 0.461 },  // green  panel (row 2)
-    { sectionTop: 0.546, shelfY: 0.698, btnCY: 0.623 },  // purple panel (row 3)
-    { sectionTop: 0.707, shelfY: 0.854, btnCY: 0.782 },  // gold   panel (row 4)
+    { sectionTop: 0.185, shelfY: 0.342, btnCY: 0.350 },  // GEAR        panel (row 1)
+    { sectionTop: 0.372, shelfY: 0.526, btnCY: 0.535 },  // EQUIPMENT   panel (row 2)
+    { sectionTop: 0.558, shelfY: 0.712, btnCY: 0.720 },  // TEAMS       panel (row 3)
+    { sectionTop: 0.738, shelfY: 0.860, btnCY: 0.867 },  // MEMORABILIA panel (row 4)
   ],
 
-  saveAreaY: 0.882,
+  saveAreaY: 0.885,
 } as const;
 
 // ── useImageRect ─────────────────────────────────────────────────────────────
@@ -277,7 +277,7 @@ export default function WardrobePage() {
             const btnCY   = pY(ir, lm.btnCY);
             const btnH    = Math.max(32, pH(ir, 0.045));
 
-            const labelY  = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+            const labelY  = pY(ir, lm.sectionTop + 0.018);
             const labelFs = Math.max(9, pH(ir, 0.013));
 
             return (

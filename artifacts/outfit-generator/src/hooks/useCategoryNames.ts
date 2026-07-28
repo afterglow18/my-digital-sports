@@ -13,10 +13,10 @@ const STORAGE_KEY = "mds_category_names";
 export type RowKey = "outfits" | "beauty" | "toiletries" | "essentials";
 
 export const CATEGORY_DEFAULTS: Record<RowKey, string> = {
-  outfits:    "Outfits",
-  beauty:     "Beauty",
-  toiletries: "Toiletries",
-  essentials: "Essentials",
+  outfits:    "Gear",
+  beauty:     "Equipment",
+  toiletries: "Teams",
+  essentials: "Memorabilia",
 };
 
 // ── Module-level singleton ────────────────────────────────────────────────────

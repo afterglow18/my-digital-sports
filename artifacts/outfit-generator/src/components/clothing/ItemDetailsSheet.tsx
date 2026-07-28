@@ -20,6 +20,7 @@ import {
   getWardrobeStatsQueryKey,
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCategoryNames } from "@/hooks/useCategoryNames";
 import { getImageUrl } from "@/lib/utils";
 import { PhotoCompareSheet } from "./PhotoCompareSheet";
 
@@ -27,7 +28,7 @@ import { PhotoCompareSheet } from "./PhotoCompareSheet";
 
 const SEASON_OPTIONS   = ["", "Spring", "Summer", "Fall", "Winter", "All Season"];
 const OCCASION_OPTIONS = ["", "Casual", "Work", "Formal", "Sport", "Special Event"];
-const CATEGORY_OPTIONS = ["outfits", "beauty", "toiletries", "essentials"];
+const CATEGORY_KEYS    = ["outfits", "beauty", "toiletries", "essentials"] as const;
 
 function Field({
   label, value, onChange, placeholder, type = "text",
@@ -141,6 +142,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
   const queryClient = useQueryClient();
+  const { names }   = useCategoryNames();
 
   useEffect(() => {
     if (item) setForm(toForm(item));
@@ -237,7 +239,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 240 }}
-        className="fixed inset-0 z-[65] flex flex-col max-w-md mx-auto bg-[#f9f4ee] overflow-y-auto"
+        className="fixed inset-0 z-[65] flex flex-col max-w-md mx-auto bg-[#EDF6FB] overflow-y-auto"
       >
         {/* ── Header ── */}
         <div
@@ -314,7 +316,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                 onClick={() => setCompareOpen(true)}
                 className="w-full py-2.5 flex items-center justify-center gap-2
                            text-xs font-bold uppercase tracking-wider text-black/55
-                           bg-white hover:bg-[#f9f4ee] transition-colors"
+                           bg-white hover:bg-[#EDF6FB] transition-colors"
               >
                 ✨ Clean Up Photo
               </button>
@@ -365,12 +367,25 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <SelectField
-              label="Category"
-              value={form.category}
-              onChange={patch("category") as (v: string) => void}
-              options={CATEGORY_OPTIONS}
-            />
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
+                Category
+              </label>
+              <div className="relative">
+                <select
+                  value={form.category}
+                  onChange={(e) => patch("category")(e.target.value)}
+                  className="w-full appearance-none border-2 border-black rounded-lg px-3 py-2 pr-8
+                             text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                >
+                  <option value="">— Category —</option>
+                  {CATEGORY_KEYS.map(key => (
+                    <option key={key} value={key}>{names[key]}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-black/40" />
+              </div>
+            </div>
             <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
               <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
               <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
