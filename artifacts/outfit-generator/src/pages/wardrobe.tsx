@@ -277,7 +277,7 @@ export default function WardrobePage() {
             const labelY  = pY(ir, lm.sectionTop + (rowIdx === 0 ? 0.033 : rowIdx < 3 ? 0.028 : 0.018));
             const labelFs = Math.max(9, pH(ir, 0.013));
             const labelH  = labelFs * 1.6;
-            const carTop  = labelY + labelH / 2 + 4;
+            const carTop  = labelY + labelH / 2 + 10;
             const carH    = (secTop + secH) - carTop;
 
             return (
