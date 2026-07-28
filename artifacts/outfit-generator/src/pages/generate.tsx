@@ -12,6 +12,7 @@
 import React, {
   useCallback, useEffect, useRef, useState, RefObject,
 } from "react";
+import { useCategoryNames } from "@/hooks/useCategoryNames";
 import {
   useListClothing, getListClothingQueryKey,
   useGenerateOutfit, useSaveOutfit, getListOutfitsQueryKey,
@@ -100,6 +101,10 @@ export default function GeneratePage() {
   const [centred,    setCentred]    = useState<Partial<Record<RowKey, ClothingItem>>>({});
   const [isSaveOpen, setIsSaveOpen] = useState(false);
   const [saveName,   setSaveName]   = useState("");
+  const [editingKey, setEditingKey] = useState<RowKey | null>(null);
+  const [draft,      setDraft]      = useState("");
+
+  const { names, setName } = useCategoryNames();
 
   const rowDataRef = useRef<Record<RowKey, ClothingItem[]>>({
     outfits: [], beauty: [], toiletries: [], essentials: [],
@@ -301,33 +306,70 @@ export default function GeneratePage() {
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
-              const label = key.toUpperCase();
               const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+              const labelFs = Math.max(9, pH(ir, 0.013));
 
               return (
                 <React.Fragment key={key}>
 
-                  {/* ── Category label ── */}
-                  <div style={{
-                    position: "absolute",
-                    top: labelY,
-                    left: carLeft,
-                    width: carW,
-                    transform: "translateY(-50%)",
-                    zIndex: 12,
-                    textAlign: "center",
-                    pointerEvents: "none",
-                  }}>
-                    <span style={{
-                      fontSize: Math.max(9, pH(ir, 0.013)),
-                      fontWeight: 800,
-                      letterSpacing: "0.12em",
-                      color: "#0D2847",
-                      fontFamily: "var(--font-display)",
-                      textTransform: "uppercase",
-                    }}>
-                      {label}
-                    </span>
+                  {/* ── Category label — tap to rename ── */}
+                  <div
+                    onClick={() => {
+                      if (phase !== "idle") return;
+                      setDraft(names[key]);
+                      setEditingKey(key);
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: labelY,
+                      left: carLeft,
+                      width: carW,
+                      transform: "translateY(-50%)",
+                      zIndex: 12,
+                      textAlign: "center",
+                      cursor: phase === "idle" ? "text" : "default",
+                    }}
+                  >
+                    {editingKey === key ? (
+                      <input
+                        autoFocus
+                        value={draft}
+                        onChange={e => setDraft(e.target.value)}
+                        onBlur={() => { setName(key, draft); setEditingKey(null); }}
+                        onKeyDown={e => {
+                          if (e.key === "Enter")  { setName(key, draft); setEditingKey(null); }
+                          if (e.key === "Escape") { setEditingKey(null); }
+                        }}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          width: "80%",
+                          background: "rgba(255,255,255,0.92)",
+                          border: "1.5px solid #1A9FD8",
+                          borderRadius: 6,
+                          textAlign: "center",
+                          fontSize: labelFs,
+                          fontWeight: 800,
+                          letterSpacing: "0.12em",
+                          color: "#0D2847",
+                          fontFamily: "var(--font-display)",
+                          textTransform: "uppercase",
+                          padding: "2px 6px",
+                          outline: "none",
+                        }}
+                      />
+                    ) : (
+                      <span style={{
+                        fontSize: labelFs,
+                        fontWeight: 800,
+                        letterSpacing: "0.12em",
+                        color: "#0D2847",
+                        fontFamily: "var(--font-display)",
+                        textTransform: "uppercase",
+                        borderBottom: phase === "idle" ? "1px dashed rgba(13,40,71,0.30)" : "none",
+                      }}>
+                        {names[key]}
+                      </span>
+                    )}
                   </div>
 
                   {items.length > 0 ? (

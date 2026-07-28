@@ -37,16 +37,17 @@ import { UpgradeSheet, UpgradeReason } from "@/components/paywall/UpgradeSheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { FREE_ITEM_LIMIT } from "@/lib/entitlements";
+import { useCategoryNames } from "@/hooks/useCategoryNames";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type RowKey   = "outfits" | "beauty" | "toiletries" | "essentials";
 type Category = "outfits" | "beauty" | "toiletries" | "essentials";
 
-const ROWS: { key: RowKey; btnLabel: string }[] = [
-  { key: "outfits",    btnLabel: "+ ADD OUTFITS"    },
-  { key: "beauty",     btnLabel: "+ ADD BEAUTY"     },
-  { key: "toiletries", btnLabel: "+ ADD TOILETRIES" },
-  { key: "essentials", btnLabel: "+ ADD ESSENTIALS" },
+const ROWS: { key: RowKey }[] = [
+  { key: "outfits"    },
+  { key: "beauty"     },
+  { key: "toiletries" },
+  { key: "essentials" },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
@@ -113,6 +114,8 @@ export default function WardrobePage() {
     toiletries: useRef<ClosetRowHandle | null>(null),
     essentials: useRef<ClosetRowHandle | null>(null),
   };
+
+  const { names } = useCategoryNames();
 
   const [centred,       setCentred]       = useState<Partial<Record<RowKey, ClothingItem>>>({});
   const [addCategory,   setAddCategory]   = useState<Category | null>(null);
@@ -260,9 +263,10 @@ export default function WardrobePage() {
           )}
 
           {/* ── 4 shelf rows ── */}
-          {ROWS.map(({ key, btnLabel }, rowIdx) => {
+          {ROWS.map(({ key }, rowIdx) => {
             const lm      = LM.rows[rowIdx];
             const items   = rowData[key];
+            const btnLabel = `+ ADD ${names[key].toUpperCase()}`;
 
             const secTop  = pY(ir, lm.sectionTop);
             const secH    = pH(ir, lm.shelfY - lm.sectionTop);
@@ -273,12 +277,39 @@ export default function WardrobePage() {
             const btnCY   = pY(ir, lm.btnCY);
             const btnH    = Math.max(32, pH(ir, 0.045));
 
-            const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+            const labelY  = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+            const labelFs = Math.max(9, pH(ir, 0.013));
 
             return (
               <React.Fragment key={key}>
 
-                {/* ── Category label tap zone — labels baked into image; keep click zone ── */}
+                {/* ── Category name overlay ── */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: labelY,
+                    left: carLeft,
+                    width: carW,
+                    transform: "translateY(-50%)",
+                    zIndex: 21,
+                    textAlign: "center",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <span style={{
+                    fontSize: labelFs,
+                    fontWeight: 800,
+                    letterSpacing: "0.12em",
+                    color: "#0D2847",
+                    fontFamily: "var(--font-display)",
+                    textTransform: "uppercase",
+                    textShadow: "0 1px 3px rgba(255,255,255,0.6)",
+                  }}>
+                    {names[key]}
+                  </span>
+                </div>
+
+                {/* ── Category label tap zone ── */}
                 <button
                   onClick={addHandlers[key]}
                   aria-label={btnLabel}
