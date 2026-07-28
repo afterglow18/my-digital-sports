@@ -187,12 +187,12 @@ export function PhotoCompareSheet({ open, onOpenChange, originalDataUrl, onConfi
               style={{
                 flex: 1, padding: 0, background: "none",
                 border: selected === "original"
-                  ? "4px solid #ec4899"
+                  ? "4px solid #1a9fd8"
                   : "4px solid rgba(0,0,0,0.12)",
                 borderRadius: 18, overflow: "hidden",
                 cursor: "pointer",
                 boxShadow: selected === "original"
-                  ? "0 0 0 2px rgba(236,72,153,0.18)"
+                  ? "0 0 0 2px rgba(26,159,216,0.18)"
                   : "none",
                 opacity: selected === "original" ? 1 : 0.55,
                 transition: "all 0.15s ease",
@@ -210,7 +210,7 @@ export function PhotoCompareSheet({ open, onOpenChange, originalDataUrl, onConfi
                 textAlign: "center", fontWeight: 700, fontSize: 11,
                 textTransform: "uppercase", letterSpacing: 1,
                 padding: "8px 0", background: "#f9f4ee",
-                color: selected === "original" ? "#ec4899" : "rgba(0,0,0,0.5)",
+                color: selected === "original" ? "#1a9fd8" : "rgba(0,0,0,0.5)",
               }}>
                 Original
               </div>
@@ -223,12 +223,12 @@ export function PhotoCompareSheet({ open, onOpenChange, originalDataUrl, onConfi
               style={{
                 flex: 1, padding: 0, background: "none",
                 border: selected === "cleaned" && cleanedSelectable
-                  ? "4px solid #ec4899"
+                  ? "4px solid #1a9fd8"
                   : "4px solid rgba(0,0,0,0.12)",
                 borderRadius: 18, overflow: "hidden",
                 cursor: cleanedSelectable ? "pointer" : "default",
                 boxShadow: selected === "cleaned" && cleanedSelectable
-                  ? "0 0 0 2px rgba(236,72,153,0.18)"
+                  ? "0 0 0 2px rgba(26,159,216,0.18)"
                   : "none",
                 opacity: cleanedSelectable ? (selected === "cleaned" ? 1 : 0.55) : 0.4,
                 transition: "all 0.15s ease",
@@ -274,7 +274,7 @@ export function PhotoCompareSheet({ open, onOpenChange, originalDataUrl, onConfi
                 textAlign: "center", fontWeight: 700, fontSize: 11,
                 textTransform: "uppercase", letterSpacing: 1,
                 padding: "8px 0", background: "#f9f4ee",
-                color: selected === "cleaned" && cleanedSelectable ? "#ec4899" : "rgba(0,0,0,0.4)",
+                color: selected === "cleaned" && cleanedSelectable ? "#1a9fd8" : "rgba(0,0,0,0.4)",
               }}>
                 Cleaned ✨
               </div>
