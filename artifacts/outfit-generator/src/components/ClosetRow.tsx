@@ -52,11 +52,13 @@ interface ClosetRowProps {
   maxPhotoH?: number;
   /** When true, swipe gestures are disabled (used on Generate page). */
   disableSwipe?: boolean;
+  /** When true, cards are bottom-aligned so photos grow upward from a fixed bottom edge. */
+  pinBottom?: boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
-  ({ items, onCenteredItem, onItemTap, maxPhotoH, disableSwipe = false }, ref) => {
+  ({ items, onCenteredItem, onItemTap, maxPhotoH, disableSwipe = false, pinBottom = false }, ref) => {
 
     // ── Container measurement ─────────────────────────────────────────────────
     const containerRef = useRef<HTMLDivElement>(null);
@@ -313,7 +315,7 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
                   padding: 0,
                   WebkitTapHighlightColor: "transparent",
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: pinBottom ? "flex-end" : "center",
                   justifyContent: "center",
                   // z-index so the scaled-up center card renders above its neighbours
                   zIndex: isCenter ? 2 : 1,
