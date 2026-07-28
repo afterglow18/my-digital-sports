@@ -300,10 +300,10 @@ export default function WardrobePage() {
                     fontSize: labelFs,
                     fontWeight: 800,
                     letterSpacing: "0.12em",
-                    color: "#0D2847",
+                    color: "#ffffff",
                     fontFamily: "var(--font-display)",
                     textTransform: "uppercase",
-                    textShadow: "0 1px 3px rgba(255,255,255,0.6)",
+                    textShadow: "0 1px 4px rgba(0,0,0,0.7)",
                   }}>
                     {names[key]}
                   </span>

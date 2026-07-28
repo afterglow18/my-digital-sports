@@ -354,6 +354,7 @@ export default function GeneratePage() {
                           fontFamily: "var(--font-display)",
                           textTransform: "uppercase",
                           padding: "2px 6px",
+
                           outline: "none",
                         }}
                       />
@@ -362,10 +363,11 @@ export default function GeneratePage() {
                         fontSize: labelFs,
                         fontWeight: 800,
                         letterSpacing: "0.12em",
-                        color: "#0D2847",
+                        color: "#ffffff",
                         fontFamily: "var(--font-display)",
                         textTransform: "uppercase",
-                        borderBottom: phase === "idle" ? "1px dashed rgba(13,40,71,0.30)" : "none",
+                        textShadow: "0 1px 4px rgba(0,0,0,0.7)",
+                        borderBottom: phase === "idle" ? "1px dashed rgba(255,255,255,0.50)" : "none",
                       }}>
                         {names[key]}
                       </span>
