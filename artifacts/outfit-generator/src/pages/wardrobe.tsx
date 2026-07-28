@@ -334,7 +334,7 @@ export default function WardrobePage() {
                       items={items}
                       onCenteredItem={setCentredHandlers[key]}
                       onItemTap={handleItemTap}
-                      maxPhotoH={Math.max(0, carH - (rowIdx === 3 ? -8 : 6))}
+                      maxPhotoH={Math.max(0, carH - (rowIdx === 3 ? -14 : 6))}
                       pinTop
                     />
                   </div>
