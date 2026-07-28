@@ -306,7 +306,7 @@ export default function GeneratePage() {
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
-              const labelY = pY(ir, lm.sectionTop + (rowIdx < 3 ? 0.038 : 0.018));
+              const labelY = pY(ir, lm.sectionTop + (rowIdx < 3 ? 0.028 : 0.018));
               const labelFs = Math.max(9, pH(ir, 0.013));
 
               return (
