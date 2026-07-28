@@ -34,6 +34,7 @@ export default function WelcomePage({ onEnter }: Props) {
         alignItems: "center",
         background: "#0d1b2e",
         overflow: "hidden",
+        paddingTop: "max(env(safe-area-inset-top), 28px)",
       }}
     >
       {/* ── Hero image — fills most of the screen ── */}
