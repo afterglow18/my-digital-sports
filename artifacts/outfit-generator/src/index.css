@@ -76,13 +76,13 @@
 
 :root {
   
-  /* Suitcase Palette: Warm Tan, Leather Brown, Cream, Black */
-  --background: 40 30% 97%; /* Cream */
+  /* Sports Palette: Sky Blue, Stadium Blue, White, Black */
+  --background: 200 50% 97%; /* Very Light Sky */
   --foreground: 0 0% 9%; /* Almost Black */
   
   --border: 0 0% 9%;
   --input: 0 0% 9%;
-  --ring: 28 45% 40%;
+  --ring: 204 60% 40%;
   
   --card: 0 0% 100%;
   --card-foreground: 0 0% 9%;
@@ -92,11 +92,11 @@
   --popover-foreground: 0 0% 9%;
   --popover-border: 0 0% 9%;
   
-  --primary: 35 55% 82%; /* Warm Tan */
-  --primary-foreground: 28 50% 18%; /* Dark Brown */
+  --primary: 200 80% 84%; /* Sky Blue */
+  --primary-foreground: 210 70% 15%; /* Dark Navy */
   
-  --secondary: 28 42% 55%; /* Medium Leather Brown */
-  --secondary-foreground: 40 30% 97%; /* Cream */
+  --secondary: 204 70% 48%; /* Stadium Blue */
+  --secondary-foreground: 0 0% 100%; /* White */
   
   --muted: 0 0% 90%;
   --muted-foreground: 0 0% 40%;
@@ -137,11 +137,11 @@
   --popover-foreground: 45 33% 98%;
   --popover-border: 45 33% 98%;
   
-  --primary: 35 55% 82%;
-  --primary-foreground: 28 50% 18%;
+  --primary: 200 80% 84%;
+  --primary-foreground: 210 70% 15%;
   
-  --secondary: 28 42% 55%;
-  --secondary-foreground: 40 30% 97%;
+  --secondary: 204 70% 48%;
+  --secondary-foreground: 0 0% 100%;
   
   --muted: 0 0% 20%;
   --muted-foreground: 0 0% 70%;

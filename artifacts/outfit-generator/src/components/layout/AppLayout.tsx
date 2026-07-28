@@ -51,7 +51,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   ];
 
   return (
-    <div className="flex h-[100dvh] w-full bg-[#F5F0E8]">
+    <div className="flex h-[100dvh] w-full bg-[#EDF6FB]">
 
       {/* ── Sidebar nav — iPad / desktop only ─────────────────────────────── */}
       <nav

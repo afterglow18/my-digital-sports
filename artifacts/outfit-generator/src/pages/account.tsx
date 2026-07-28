@@ -157,7 +157,7 @@ export default function AccountPage() {
     <>
     <div
       className="min-h-full flex flex-col px-4 pb-10"
-      style={{ paddingTop: "max(2rem, env(safe-area-inset-top))", background: "#F5F0E8" }}
+      style={{ paddingTop: "max(2rem, env(safe-area-inset-top))", background: "#EDF6FB" }}
     >
       {/* Page title */}
       <header className="mb-5">
@@ -259,7 +259,7 @@ export default function AccountPage() {
                   className="absolute top-0.5 w-5 h-5 rounded-full border-[2px] border-black
                                transition-all duration-200"
                   style={{
-                    background: "#F5F0E8",
+                    background: "#EDF6FB",
                     left: isLockEnabled ? "calc(100% - 1.375rem)" : "0.125rem",
                   }}
                 />

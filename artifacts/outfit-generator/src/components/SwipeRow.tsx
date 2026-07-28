@@ -309,7 +309,7 @@ export const SwipeRow = forwardRef<SwipeRowHandle, SwipeRowProps>(
                     ? {
                         flex: 1, overflow: "hidden", position: "relative",
                         borderRadius: "0 0 10px 10px",
-                        background: "rgba(245,237,216,0.96)",
+                        background: "rgba(220,240,252,0.96)",
                         boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)",
                         border: "1px solid rgba(196,155,42,0.14)",
                       }
