@@ -207,9 +207,6 @@ export function UpgradeSheet({ reason, onClose }: Props) {
       {/* Content — fills remaining height, no scroll */}
       <div className="flex-1 min-h-0 flex flex-col justify-between px-5 pt-3 pb-2">
 
-        {/* spacer placeholder — headline moved to plaid header */}
-        <div>
-
         {/* Features card */}
         <div className="rounded-2xl border-[3px] border-black overflow-hidden" style={{ background: "#111" }}>
           <div className="px-4 py-4 flex flex-col gap-2">
