@@ -1,5 +1,5 @@
 /**
- * WardrobePage — briefcase-bg.png (1024×1536 PNG)
+ * WardrobePage — sports-hero.png (1024×1536 PNG)
  *
  * Layout: 4 shelf sections inside a Hollywood-mirror frame.
  * Items sit ON TOP of each shelf surface (bottom-anchored within each section).
@@ -216,7 +216,7 @@ export default function WardrobePage() {
     >
       {/* ── Background image ── */}
       <img
-        src="/generate-bg.png"
+        src="/sports-hero.png"
         alt="My Digital Sports"
         style={{
           position: "absolute",

@@ -1,7 +1,7 @@
 /**
  * GeneratePage — "Spin It" screen for My Digital Sports.
  *
- * Uses generate-bg.png (same 1024×1536 dimensions) with the 4-shelf layout.
+ * Uses sports-hero.png (1024×1536) with the 4-shelf layout.
  * Phase machine:
  *   idle     → shelves display items; "✨ Spin It!" button at bottom
  *   spinning → carousels cycle randomly while API is in flight
@@ -250,7 +250,7 @@ export default function GeneratePage() {
     >
       {/* ── Background image ── */}
       <img
-        src="/generate-bg.png"
+        src="/sports-hero.png"
         alt="My Digital Sports"
         style={{
           position: "absolute",
