@@ -250,7 +250,7 @@ export default function GeneratePage() {
     >
       {/* ── Background image ── */}
       <img
-        src="/sports-hero.png"
+        src="/generate-bg.png"
         alt="My Digital Sports"
         style={{
           position: "absolute",
