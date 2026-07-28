@@ -283,17 +283,22 @@ export default function WardrobePage() {
             return (
               <React.Fragment key={key}>
 
-                {/* ── Category name overlay ── */}
-                <div
+                {/* ── Category heading — visible + tappable ── */}
+                <button
+                  onClick={addHandlers[key]}
+                  aria-label={btnLabel}
                   style={{
                     position: "absolute",
                     top: labelY,
                     left: carLeft,
                     width: carW,
                     transform: "translateY(-50%)",
-                    zIndex: 21,
+                    zIndex: 23,
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "6px 0",
                     textAlign: "center",
-                    pointerEvents: "none",
                   }}
                 >
                   <span style={{
@@ -308,25 +313,7 @@ export default function WardrobePage() {
                   }}>
                     + Add {names[key]}
                   </span>
-                </div>
-
-                {/* ── Category label tap zone ── */}
-                <button
-                  onClick={addHandlers[key]}
-                  aria-label={btnLabel}
-                  style={{
-                    position: "absolute",
-                    top: labelY,
-                    left: carLeft,
-                    width: carW,
-                    transform: "translateY(-50%)",
-                    zIndex: 23,
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                  }}
-                />
+                </button>
 
                 {/* ── Item carousel — fills the section between buttons ── */}
                 {items.length > 0 && (
