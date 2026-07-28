@@ -495,7 +495,7 @@ export default function GeneratePage() {
                 height: pH(ir, LM.barBot - LM.barY),
                 zIndex: 18,
                 pointerEvents: "none",
-                background: "transparent",
+                background: "rgba(0,0,0,0.85)",
               }}
             />
 
