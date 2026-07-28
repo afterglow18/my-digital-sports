@@ -283,33 +283,7 @@ export default function WardrobePage() {
             return (
               <React.Fragment key={key}>
 
-                {/* ── Category name overlay ── */}
-                <div
-                  style={{
-                    position: "absolute",
-                    top: labelY,
-                    left: carLeft,
-                    width: carW,
-                    transform: "translateY(-50%)",
-                    zIndex: 21,
-                    textAlign: "center",
-                    pointerEvents: "none",
-                  }}
-                >
-                  <span style={{
-                    fontSize: labelFs,
-                    fontWeight: 800,
-                    letterSpacing: "0.12em",
-                    color: "#ffffff",
-                    fontFamily: "var(--font-display)",
-                    textTransform: "uppercase",
-                    textShadow: "0 0 8px rgba(255,255,255,0.9), 0 0 16px rgba(255,255,255,0.5)",
-                  }}>
-                    {names[key]}
-                  </span>
-                </div>
-
-                {/* ── Category label tap zone ── */}
+                {/* ── Category heading button ── */}
                 <button
                   onClick={addHandlers[key]}
                   aria-label={btnLabel}
@@ -324,8 +298,34 @@ export default function WardrobePage() {
                     border: "none",
                     cursor: "pointer",
                     padding: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 1,
                   }}
-                />
+                >
+                  <span style={{
+                    fontSize: labelFs,
+                    fontWeight: 800,
+                    letterSpacing: "0.12em",
+                    color: "#ffffff",
+                    fontFamily: "var(--font-display)",
+                    textTransform: "uppercase",
+                    textShadow: "0 0 8px rgba(255,255,255,0.9), 0 0 16px rgba(255,255,255,0.5)",
+                  }}>
+                    {names[key]}
+                  </span>
+                  <span style={{
+                    fontSize: Math.max(7, labelFs * 0.75),
+                    fontWeight: 700,
+                    letterSpacing: "0.10em",
+                    color: "rgba(255,255,255,0.80)",
+                    textTransform: "uppercase",
+                    textShadow: "0 0 6px rgba(255,255,255,0.7)",
+                  }}>
+                    + Add
+                  </span>
+                </button>
 
                 {/* ── Item carousel — fills the section between buttons ── */}
                 {items.length > 0 && (
