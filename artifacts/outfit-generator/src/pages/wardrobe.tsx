@@ -243,17 +243,14 @@ export default function WardrobePage() {
               aria-label={`${totalItems} of ${FREE_ITEM_LIMIT} items used — tap to upgrade`}
               style={{
                 position: "absolute",
-                top: pY(ir, 0.200), left: "50%", transform: "translateX(-50%)",
+                top: pY(ir, 0.188), left: "50%", transform: "translateX(-50%)",
                 zIndex: 25,
-                padding: "3px 14px", borderRadius: 20, border: "none",
-                background: totalItems >= FREE_ITEM_LIMIT
-                  ? "rgba(200,40,40,0.14)"
-                  : "rgba(255,255,255,0.55)",
-                boxShadow: totalItems >= FREE_ITEM_LIMIT
-                  ? "0 0 0 2px rgba(200,40,40,0.40)"
-                  : "0 0 0 1.5px rgba(70,150,200,0.28)",
-                color: totalItems >= FREE_ITEM_LIMIT ? "#aa0000" : "#1a5a8a",
-                fontWeight: 700, fontSize: 10,
+                padding: "2px 10px", borderRadius: 20, border: "none",
+                background: "none",
+                boxShadow: "none",
+                color: totalItems >= FREE_ITEM_LIMIT ? "#ff6b6b" : "#ffffff",
+                textShadow: "0 0 8px rgba(255,255,255,0.8)",
+                fontWeight: 700, fontSize: 8,
                 letterSpacing: "0.08em", textTransform: "uppercase",
                 whiteSpace: "nowrap", cursor: "pointer",
               }}
