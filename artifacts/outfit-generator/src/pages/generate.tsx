@@ -446,7 +446,7 @@ export default function GeneratePage() {
                     padding: "3px 11px", borderRadius: 20,
                     whiteSpace: "nowrap",
                   }}>
-                    Building your kit…
+                    Building your locker…
                   </span>
                 </motion.div>
               )}
@@ -652,7 +652,7 @@ export default function GeneratePage() {
                     <input
                       autoFocus
                       type="text"
-                      placeholder="Name this case…"
+                      placeholder="Name this locker…"
                       value={saveName}
                       onChange={e => setSaveName(e.target.value)}
                       onKeyDown={e => e.key === "Enter" && handleSave()}
