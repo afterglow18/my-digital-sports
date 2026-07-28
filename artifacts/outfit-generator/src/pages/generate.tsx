@@ -308,6 +308,9 @@ export default function GeneratePage() {
 
               const labelY = pY(ir, lm.sectionTop + (rowIdx === 0 ? 0.033 : rowIdx < 3 ? 0.028 : 0.018));
               const labelFs = Math.max(9, pH(ir, 0.013));
+              const labelH  = labelFs * 1.6;
+              const carTop  = labelY + labelH / 2 + 4;
+              const carH    = (secTop + secH) - carTop;
 
               return (
                 <React.Fragment key={key}>
@@ -378,7 +381,7 @@ export default function GeneratePage() {
                     <div
                       style={{
                         position: "absolute",
-                        top: secTop, left: carLeft, width: carW, height: secH,
+                        top: carTop, left: carLeft, width: carW, height: carH,
                         zIndex: 10, overflow: "visible",
                       }}
                     >
@@ -393,7 +396,7 @@ export default function GeneratePage() {
                   ) : (
                     <div style={{
                       position: "absolute",
-                      top: secTop, left: carLeft, width: carW, height: secH,
+                      top: carTop, left: carLeft, width: carW, height: carH,
                       zIndex: 10,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
