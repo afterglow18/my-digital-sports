@@ -33,7 +33,7 @@ const LM = {
   doorL: 0.020,
   doorR: 0.980,
   rows: [
-    { sectionTop: 0.265, shelfY: 0.422, btnCY: 0.430 },  // GEAR        panel (row 1)
+    { sectionTop: 0.272, shelfY: 0.429, btnCY: 0.437 },  // GEAR        panel (row 1)
     { sectionTop: 0.437, shelfY: 0.591, btnCY: 0.600 },  // EQUIPMENT   panel (row 2)
     { sectionTop: 0.593, shelfY: 0.747, btnCY: 0.755 },  // TEAMS       panel (row 3)
     { sectionTop: 0.773, shelfY: 0.880, btnCY: 0.887 },  // MEMORABILIA panel (row 4)
