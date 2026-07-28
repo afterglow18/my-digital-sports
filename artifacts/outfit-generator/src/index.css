@@ -65,7 +65,7 @@
   --app-font-display: 'Syne', sans-serif;
 
   /* Bottom nav height — 0 when the sidebar is shown on iPad/desktop */
-  --app-nav-h: 110px;
+  --app-nav-h: 90px;
 }
 
 @media (min-width: 768px) {
