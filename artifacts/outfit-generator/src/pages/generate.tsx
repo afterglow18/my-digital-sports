@@ -366,7 +366,7 @@ export default function GeneratePage() {
                         color: "#ffffff",
                         fontFamily: "var(--font-display)",
                         textTransform: "uppercase",
-                        textShadow: "0 1px 4px rgba(0,0,0,0.7)",
+                        textShadow: "0 0 8px rgba(255,255,255,0.9), 0 0 16px rgba(255,255,255,0.5)",
                         borderBottom: phase === "idle" ? "1px dashed rgba(255,255,255,0.50)" : "none",
                       }}>
                         {names[key]}
