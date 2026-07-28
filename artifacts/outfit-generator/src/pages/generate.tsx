@@ -33,10 +33,10 @@ const LM = {
   doorL: 0.020,
   doorR: 0.980,
   rows: [
-    { sectionTop: 0.235, shelfY: 0.392, btnCY: 0.400 },  // GEAR        panel (row 1)
-    { sectionTop: 0.422, shelfY: 0.576, btnCY: 0.585 },  // EQUIPMENT   panel (row 2)
-    { sectionTop: 0.608, shelfY: 0.762, btnCY: 0.770 },  // TEAMS       panel (row 3)
-    { sectionTop: 0.788, shelfY: 0.895, btnCY: 0.902 },  // MEMORABILIA panel (row 4)
+    { sectionTop: 0.250, shelfY: 0.407, btnCY: 0.415 },  // GEAR        panel (row 1)
+    { sectionTop: 0.437, shelfY: 0.591, btnCY: 0.600 },  // EQUIPMENT   panel (row 2)
+    { sectionTop: 0.593, shelfY: 0.747, btnCY: 0.755 },  // TEAMS       panel (row 3)
+    { sectionTop: 0.773, shelfY: 0.880, btnCY: 0.887 },  // MEMORABILIA panel (row 4)
   ],
   // Action bar: bottom bar (football | SAVE | baseball)
   barY:   0.885,
