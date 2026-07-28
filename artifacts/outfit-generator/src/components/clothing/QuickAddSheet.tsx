@@ -15,6 +15,7 @@ import {
   getListClothingQueryKey,
   getWardrobeStatsQueryKey,
 } from "@/hooks/useLocalDB";
+import { useCategoryNames } from "@/hooks/useCategoryNames";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   removeBackground,
@@ -124,7 +125,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   const createItem  = useCreateClothingItem();
   const queryClient = useQueryClient();
 
-  const label = CATEGORY_LABELS[category];
+  const { names: categoryNames } = useCategoryNames();
+  const label = categoryNames[category] ?? CATEGORY_LABELS[category];
 
   // ── Full reset / close ────────────────────────────────────────────────────
 
