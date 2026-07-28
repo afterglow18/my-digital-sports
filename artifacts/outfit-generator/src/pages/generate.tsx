@@ -275,7 +275,7 @@ export default function GeneratePage() {
             {/* MATCHMAKER label: position below the baked-in title area */}
             <div style={{
               position: "absolute",
-              top: pY(ir, 0.225),
+              top: pY(ir, 0.255),
               left: 8,
               right: 8,
               zIndex: 25,
