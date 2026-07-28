@@ -36,7 +36,7 @@ const LM = {
     { sectionTop: 0.272, shelfY: 0.429, btnCY: 0.437 },  // GEAR        panel (row 1)
     { sectionTop: 0.437, shelfY: 0.591, btnCY: 0.600 },  // EQUIPMENT   panel (row 2)
     { sectionTop: 0.586, shelfY: 0.740, btnCY: 0.748 },  // TEAMS       panel (row 3)
-    { sectionTop: 0.773, shelfY: 0.880, btnCY: 0.887 },  // MEMORABILIA panel (row 4)
+    { sectionTop: 0.760, shelfY: 0.867, btnCY: 0.874 },  // MEMORABILIA panel (row 4)
   ],
   // Action bar: bottom bar (football | SAVE | baseball)
   barY:   0.885,
