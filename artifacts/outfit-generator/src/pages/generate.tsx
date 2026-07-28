@@ -389,7 +389,8 @@ export default function GeneratePage() {
                         ref={rowRefs[key]}
                         items={items}
                         onCenteredItem={setCentredHandlers[key]}
-                        maxPhotoH={Math.max(0, sectionHeights[rowIdx] - 4)}
+                        maxPhotoH={Math.max(0, carH - 6)}
+                        pinTop
                         disableSwipe
                       />
                     </div>
