@@ -131,7 +131,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="flex flex-col flex-1 min-w-0 relative">
 
         {/* Scrollable page content */}
-        <main className="flex-1 overflow-y-auto pb-[90px] md:pb-0 relative">
+        <main className="flex-1 overflow-y-auto md:pb-0 relative" style={{ paddingBottom: "calc(90px + env(safe-area-inset-bottom, 0px))" }}>
           {children}
         </main>
 
