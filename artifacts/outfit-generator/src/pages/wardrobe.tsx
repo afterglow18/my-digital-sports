@@ -334,7 +334,7 @@ export default function WardrobePage() {
                       items={items}
                       onCenteredItem={setCentredHandlers[key]}
                       onItemTap={handleItemTap}
-                      maxPhotoH={rowIdx === 2 ? Math.max(0, carH - 4) : uniformPhotoH}
+                      maxPhotoH={rowIdx === 2 ? Math.max(0, carH - 20) : uniformPhotoH}
                     />
                   </div>
                 )}
