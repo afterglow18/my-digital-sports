@@ -103,9 +103,6 @@ workflows:
           # Declare no non-exempt encryption so TestFlight never asks
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" App/Info.plist 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" App/Info.plist
-          # Required for Face ID usage
-          /usr/libexec/PlistBuddy -c "Add :NSFaceIDUsageDescription string 'My Digital Sports uses Face ID to protect your wardrobe.'" App/Info.plist 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :NSFaceIDUsageDescription 'My Digital Sports uses Face ID to protect your wardrobe.'" App/Info.plist
           # Required for camera and photo library access
           /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'My Digital Sports needs camera access so you can photograph items to add to your locker.'" App/Info.plist 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription 'My Digital Sports needs camera access so you can photograph items to add to your locker.'" App/Info.plist
