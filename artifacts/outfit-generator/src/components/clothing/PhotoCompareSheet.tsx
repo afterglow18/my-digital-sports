@@ -40,7 +40,7 @@ function CheckBadge() {
     <div style={{
       position: "absolute", top: 8, right: 8,
       width: 26, height: 26, borderRadius: "50%",
-      background: "#ec4899",
+      background: "#1a9fd8",
       display: "flex", alignItems: "center", justifyContent: "center",
       boxShadow: "0 2px 6px rgba(0,0,0,0.35)",
     }}>
