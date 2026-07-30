@@ -10,6 +10,8 @@
 import React, { useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { X, Loader2, Check, RotateCcw } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import {
   useCreateClothingItem,
   getListClothingQueryKey,
@@ -121,6 +123,57 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
   const cameraInputRef  = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Native camera helpers ─────────────────────────────────────────────────
+  // On iOS/Android we use @capacitor/camera so we control the presentation
+  // path. CameraSource.Prompt shows the native action sheet (Camera / Library)
+  // which is far more stable than forcing the camera directly.
+  // On web (Replit preview) we fall back to the hidden file inputs.
+
+  const handleCameraButton = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) {
+      cameraInputRef.current?.click();
+      return;
+    }
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 85,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Prompt, // native action sheet — safe presentation path
+      });
+      if (!photo.dataUrl) return;
+      const res  = await fetch(photo.dataUrl);
+      const blob = await res.blob();
+      setFileQueue([blob as File]);
+      setQueueIndex(0);
+      setSavedCount(0);
+      processFile(blob);
+    } catch {
+      // user cancelled — nothing to do
+    }
+  }, [processFile]);
+
+  const handleGalleryButton = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) {
+      galleryInputRef.current?.click();
+      return;
+    }
+    try {
+      const result = await Camera.pickImages({ quality: 85 });
+      const photos = result.photos;
+      if (!photos.length) return;
+      const blobs = await Promise.all(
+        photos.map(p => fetch(p.webPath!).then(r => r.blob()))
+      );
+      setFileQueue(blobs as File[]);
+      setQueueIndex(0);
+      setSavedCount(0);
+      processFile(blobs[0]);
+    } catch {
+      // user cancelled — nothing to do
+    }
+  }, [processFile]);
 
   const createItem  = useCreateClothingItem();
   const queryClient = useQueryClient();
@@ -319,7 +372,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             <div className="flex gap-3">
               {/* Take Photo */}
               <button
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={handleCameraButton}
                 className="flex-1 flex flex-col items-center justify-center gap-3 py-8
                            border-4 border-black rounded-2xl bg-primary
                            shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
@@ -333,7 +386,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
               {/* Upload Photo */}
               <button
-                onClick={() => galleryInputRef.current?.click()}
+                onClick={handleGalleryButton}
                 className="flex-1 flex flex-col items-center justify-center gap-3 py-8
                            border-4 border-black rounded-2xl bg-white
                            shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
