@@ -106,6 +106,13 @@ workflows:
           # Required for Face ID usage
           /usr/libexec/PlistBuddy -c "Add :NSFaceIDUsageDescription string 'My Digital Sports uses Face ID to protect your wardrobe.'" App/Info.plist 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :NSFaceIDUsageDescription 'My Digital Sports uses Face ID to protect your wardrobe.'" App/Info.plist
+          # Required for camera and photo library access
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'My Digital Sports needs camera access so you can photograph items to add to your locker.'" App/Info.plist 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription 'My Digital Sports needs camera access so you can photograph items to add to your locker.'" App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'My Digital Sports needs photo library access so you can choose photos from your library.'" App/Info.plist 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription 'My Digital Sports needs photo library access so you can choose photos from your library.'" App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 'My Digital Sports saves photos you take with the camera to your photo library.'" App/Info.plist 2>/dev/null || \
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryAddUsageDescription 'My Digital Sports saves photos you take with the camera to your photo library.'" App/Info.plist
 
       - name: Re-apply provisioning profiles after cap sync
         script: |
