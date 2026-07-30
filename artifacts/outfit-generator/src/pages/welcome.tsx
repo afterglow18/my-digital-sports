@@ -157,21 +157,8 @@ export default function WelcomePage({ onEnter }: Props) {
               minHeight: 0,
               overflow: "hidden",
             }}>
-              {/* Hero image — revealed when doors open */}
-              <img
-                src="/sports-hero.png"
-                alt="My Digital Sports"
-                draggable={false}
-                style={{
-                  position: "absolute", inset: 0,
-                  width: "100%", height: "100%",
-                  objectFit: "cover",
-                  objectPosition: "top center",
-                  userSelect: "none",
-                  pointerEvents: "none",
-                  display: "block",
-                }}
-              />
+              {/* Dark background behind doors — no hero repeat */}
+              <div style={{ position: "absolute", inset: 0, background: "#0d1b2e" }} />
 
               {/* Door panels — perspective wrapper */}
               <div style={{
