@@ -50,7 +50,7 @@ export default function WelcomePage({ onEnter }: Props) {
     if (resolvedRef.current) return;
     resolvedRef.current = true;
     setDoorState("open");
-    setTimeout(finish, 550);
+    setTimeout(finish, 450);
   }, [finish]);
 
   const isOpening = doorState === "opening" || doorState === "open";
@@ -59,7 +59,7 @@ export default function WelcomePage({ onEnter }: Props) {
   return (
     <motion.div
       animate={{ opacity: isFading ? 0 : 1 }}
-      transition={{ duration: 0.5, ease: "easeIn", delay: isFading ? 0.25 : 0 }}
+      transition={{ duration: 0.45, ease: "easeIn" }}
       style={{
         position: "fixed", inset: 0, zIndex: 200,
         background: "#0d1b2e",
