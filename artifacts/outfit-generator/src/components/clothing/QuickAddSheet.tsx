@@ -124,57 +124,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   const cameraInputRef  = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Native camera helpers ─────────────────────────────────────────────────
-  // On iOS/Android we use @capacitor/camera so we control the presentation
-  // path. CameraSource.Prompt shows the native action sheet (Camera / Library)
-  // which is far more stable than forcing the camera directly.
-  // On web (Replit preview) we fall back to the hidden file inputs.
-
-  const handleCameraButton = useCallback(async () => {
-    if (!Capacitor.isNativePlatform()) {
-      cameraInputRef.current?.click();
-      return;
-    }
-    try {
-      const photo = await Camera.getPhoto({
-        quality: 85,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Prompt, // native action sheet — safe presentation path
-      });
-      if (!photo.dataUrl) return;
-      const res  = await fetch(photo.dataUrl);
-      const blob = await res.blob();
-      setFileQueue([blob as File]);
-      setQueueIndex(0);
-      setSavedCount(0);
-      processFile(blob);
-    } catch {
-      // user cancelled — nothing to do
-    }
-  }, [processFile]);
-
-  const handleGalleryButton = useCallback(async () => {
-    if (!Capacitor.isNativePlatform()) {
-      galleryInputRef.current?.click();
-      return;
-    }
-    try {
-      const result = await Camera.pickImages({ quality: 85 });
-      const photos = result.photos;
-      if (!photos.length) return;
-      const blobs = await Promise.all(
-        photos.map(p => fetch(p.webPath!).then(r => r.blob()))
-      );
-      setFileQueue(blobs as File[]);
-      setQueueIndex(0);
-      setSavedCount(0);
-      processFile(blobs[0]);
-    } catch {
-      // user cancelled — nothing to do
-    }
-  }, [processFile]);
-
   const createItem  = useCreateClothingItem();
   const queryClient = useQueryClient();
 
@@ -270,6 +219,54 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       if (bgGenRef.current === myGen) setBgProcessing(false);
     }
   }, [resetPreviewState]);
+
+  // ── Native camera helpers ─────────────────────────────────────────────────
+  // CameraSource.Prompt shows the native action sheet (Camera / Library) which
+  // is far more stable than forcing the camera directly in WKWebView.
+  // Falls back to hidden file inputs on web (Replit preview).
+
+  const handleCameraButton = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) {
+      cameraInputRef.current?.click();
+      return;
+    }
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 85,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Prompt,
+      });
+      if (!photo.dataUrl) return;
+      const blob = await fetch(photo.dataUrl).then(r => r.blob());
+      setFileQueue([blob as File]);
+      setQueueIndex(0);
+      setSavedCount(0);
+      processFile(blob);
+    } catch {
+      // user cancelled — nothing to do
+    }
+  }, [processFile]);
+
+  const handleGalleryButton = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) {
+      galleryInputRef.current?.click();
+      return;
+    }
+    try {
+      const result = await Camera.pickImages({ quality: 85 });
+      if (!result.photos.length) return;
+      const blobs = await Promise.all(
+        result.photos.map(p => fetch(p.webPath!).then(r => r.blob()))
+      );
+      setFileQueue(blobs as File[]);
+      setQueueIndex(0);
+      setSavedCount(0);
+      processFile(blobs[0]);
+    } catch {
+      // user cancelled — nothing to do
+    }
+  }, [processFile]);
 
   // ── Input handler — queue every pick ─────────────────────────────────────
 
