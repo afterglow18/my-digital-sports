@@ -7,12 +7,14 @@
  *
  * Version scheme:
  *   0 / undefined  — unanalyzed
- *   1              — iOS Vision analyzed
+ *   1              — iOS Vision only (no canvas colors — legacy, re-indexed on next open)
+ *   2              — iOS Vision + canvas colors merged (current native)
  *   4              — web canvas analyzed, labels found
  *   5              — web analyzed, no labels (don't retry)
  *
- * On web: re-run anything below version 4.
- * On iOS: try VisionPlugin first; fall back to web canvas.
+ * Re-index rule: undefined | 0 | 1 → needs indexing.
+ * On native: Vision labels + canvas colors run in parallel and are merged.
+ * On web: canvas color extraction only.
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -37,11 +39,16 @@ async function analyzeImage(
 ): Promise<{ labels: string[]; text: string[]; version: number }> {
   if (Capacitor.isNativePlatform()) {
     try {
-      const r = await VisionNative.analyze({ dataUrl });
-      if (r.labels.length > 0 || r.text.length > 0) {
-        return { labels: r.labels, text: r.text, version: 1 };
-      }
-    } catch { /* fall through */ }
+      // Run native Vision + canvas color extraction in parallel
+      const [native, colors] = await Promise.all([
+        VisionNative.analyze({ dataUrl }),
+        extractWebColors(dataUrl).catch(() => [] as string[]),
+      ]);
+
+      // Merge: Vision object labels first, then canvas color names (deduplicated)
+      const merged = Array.from(new Set([...native.labels, ...colors]));
+      return { labels: merged, text: native.text, version: 2 };
+    } catch { /* fall through to web */ }
   }
 
   const colors = await extractWebColors(dataUrl);
@@ -64,7 +71,8 @@ export function useVisionIndexer(): { isIndexing: boolean } {
       if (processedRef.current.has(item.id)) return false;
       if (!item.imageObjectPath) return false;
       const v = item.visionVersion;
-      return v === undefined || v < 4;
+      // Re-index: unanalyzed (undefined/0) or legacy iOS-only (1, no canvas colors)
+      return v === undefined || v === 0 || v === 1;
     });
 
     if (toIndex.length === 0) return;
