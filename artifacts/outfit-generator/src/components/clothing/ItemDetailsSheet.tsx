@@ -326,7 +326,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
                            text-xs font-bold uppercase tracking-wider text-black/55
                            bg-white hover:bg-[#EDF6FB] transition-colors"
               >
-                📋 Add to Lineup
+                ⚽️ Add to Lineup
               </button>
             ) : (
               !isAlreadyCleaned && (
