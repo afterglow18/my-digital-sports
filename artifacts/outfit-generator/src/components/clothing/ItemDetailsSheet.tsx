@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCategoryNames } from "@/hooks/useCategoryNames";
 import { getImageUrl } from "@/lib/utils";
 import { PhotoCompareSheet } from "./PhotoCompareSheet";
+import { LookbookPickerSheet } from "./LookbookPickerSheet";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -84,9 +85,15 @@ function SelectField({
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface ItemDetailsSheetProps {
-  item:       ClothingItem | null;
-  onClose:    () => void;
-  onDeleted?: () => void;
+  item:               ClothingItem | null;
+  onClose:            () => void;
+  onDeleted?:         () => void;
+  /**
+   * When true: show "Add to Lineup" instead of "Clean Up Photo".
+   * Pass true only from search results and the favorites page.
+   * Default: false (show Clean Up Photo).
+   */
+  showAddToLookbook?: boolean;
 }
 
 interface FormState {
@@ -127,10 +134,11 @@ function isDirty(form: FormState, item: ClothingItem): boolean {
   );
 }
 
-export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
+export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook = false }: ItemDetailsSheetProps) {
   const [form,             setForm]             = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [compareOpen,       setCompareOpen]       = useState(false);
+  const [lookbookOpen,      setLookbookOpen]      = useState(false);
 
   /**
    * Optimistic display URL — set immediately when the user confirms a choice in
@@ -310,16 +318,27 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               )}
             </div>
 
-            {/* Clean Up Photo button — hidden once already cleaned */}
-            {!isAlreadyCleaned && (
+            {/* Context-aware action button below the photo */}
+            {showAddToLookbook ? (
               <button
-                onClick={() => setCompareOpen(true)}
+                onClick={() => setLookbookOpen(true)}
                 className="w-full py-2.5 flex items-center justify-center gap-2
                            text-xs font-bold uppercase tracking-wider text-black/55
                            bg-white hover:bg-[#EDF6FB] transition-colors"
               >
-                ✨ Clean Up Photo
+                📋 Add to Lineup
               </button>
+            ) : (
+              !isAlreadyCleaned && (
+                <button
+                  onClick={() => setCompareOpen(true)}
+                  className="w-full py-2.5 flex items-center justify-center gap-2
+                             text-xs font-bold uppercase tracking-wider text-black/55
+                             bg-white hover:bg-[#EDF6FB] transition-colors"
+                >
+                  ✨ Clean Up Photo
+                </button>
+              )
             )}
           </div>
         )}
@@ -461,6 +480,16 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             onOpenChange={setCompareOpen}
             originalDataUrl={item.imageObjectPath}
             onConfirm={handlePhotoConfirm}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Lookbook picker overlay (z-[90], above this sheet) ── */}
+      <AnimatePresence>
+        {lookbookOpen && (
+          <LookbookPickerSheet
+            item={item}
+            onClose={() => setLookbookOpen(false)}
           />
         )}
       </AnimatePresence>

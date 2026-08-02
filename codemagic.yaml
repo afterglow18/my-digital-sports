@@ -65,6 +65,29 @@ workflows:
           npx cap add ios
           npx cap sync ios
 
+      - name: Add Vision plugin to Xcode project
+        script: |
+          # Copy plugin source into the Xcode app target directory
+          cp artifacts/outfit-generator/native-plugins/Vision/VisionPlugin.swift \
+             artifacts/outfit-generator/ios/App/App/
+          cp artifacts/outfit-generator/native-plugins/Vision/VisionPlugin.m \
+             artifacts/outfit-generator/ios/App/App/
+          # Register both files with the Xcode target via xcodeproj gem
+          gem install xcodeproj --no-document 2>/dev/null || true
+          ruby - << 'RUBY'
+            require 'xcodeproj'
+            path    = 'artifacts/outfit-generator/ios/App/App.xcodeproj'
+            project = Xcodeproj::Project.open(path)
+            target  = project.targets.find { |t| t.name == 'App' }
+            group   = project.main_group.find_subpath('App', false)
+            %w[VisionPlugin.swift VisionPlugin.m].each do |fname|
+              next if group.files.any? { |f| f.display_name == fname }
+              ref = group.new_file(fname)
+              target.source_build_phase.add_file_reference(ref)
+            end
+            project.save
+          RUBY
+
       - name: Inject app icon
         script: |
           ICONSET="artifacts/outfit-generator/ios/App/App/Assets.xcassets/AppIcon.appiconset"

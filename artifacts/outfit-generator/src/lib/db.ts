@@ -36,6 +36,11 @@ export interface StoredClothingItem {
   notes?:         string | null;
   createdAt:      string;
   updatedAt:      string;
+  // Vision indexing — optional so old records without these fields stay valid
+  // visionVersion: 0 = unanalyzed, 1 = iOS Vision, 4 = web canvas OK, 5 = web no labels
+  visionLabels?:  string[];
+  visionText?:    string[];
+  visionVersion?: number;
 }
 
 export interface StoredOutfit {
@@ -58,8 +63,14 @@ export interface StoredSetting {
 
 // ── Public types (consumed by hooks and pages) ────────────────────────────────
 
-export interface ClothingItem extends Required<StoredClothingItem> {
-  id: number;
+// Vision fields are kept optional on ClothingItem so existing records (which
+// won't have them) still satisfy the type without a data migration.
+export interface ClothingItem
+  extends Omit<Required<StoredClothingItem>, 'visionLabels' | 'visionText' | 'visionVersion'> {
+  id:             number;
+  visionLabels?:  string[];
+  visionText?:    string[];
+  visionVersion?: number;
 }
 
 export interface SavedOutfit {

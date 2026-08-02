@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Route, Switch, Redirect, Router as WouterRouter } from 'wouter';
 import { useState, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AppLayout } from './components/layout/AppLayout';
 import WardrobePage from './pages/wardrobe';
 import GeneratePage from './pages/generate';
@@ -10,6 +11,7 @@ import AccountPage from './pages/account';
 import WelcomePage from './pages/welcome';
 import { SubscriptionProvider } from '@/lib/revenuecat';
 import { queryClient } from '@/lib/queryClient';
+import { useVisionIndexer } from '@/lib/visionIndexer';
 
 // ── First-launch welcome ──────────────────────────────────────────────────────
 const ENTERED_KEY = "suitcase-entered";
@@ -47,7 +49,8 @@ function Router() {
 
 // ── App shell — shows welcome on first session, then the app ─────────────────
 function AppShell() {
-  const [entered, setEntered] = useState<boolean>(hasEntered);
+  const [entered, setEntered]   = useState<boolean>(hasEntered);
+  const { isIndexing }          = useVisionIndexer();
 
   const handleEnter = useCallback(() => {
     markEntered();
@@ -59,6 +62,23 @@ function AppShell() {
       {/* App always mounted so it's visible the moment the splash fades */}
       <Router />
       {!entered && <WelcomePage onEnter={handleEnter} />}
+
+      {/* Non-blocking "Preparing photo search…" toast while indexer runs */}
+      <AnimatePresence>
+        {isIndexing && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200]
+                       px-4 py-2.5 rounded-full border-2 border-black bg-white
+                       shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                       text-xs font-bold uppercase tracking-wide whitespace-nowrap pointer-events-none"
+          >
+            🔍 Preparing photo search…
+          </motion.div>
+        )}
+      </AnimatePresence>
     </WouterRouter>
   );
 }
