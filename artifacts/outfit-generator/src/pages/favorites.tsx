@@ -218,6 +218,7 @@ export default function FavoritesPage() {
           <ItemDetailsSheet
             key={detailsItem.id}
             item={detailsItem}
+            showAddToLookbook
             onClose={handleDetailsClose}
           />
         )}
