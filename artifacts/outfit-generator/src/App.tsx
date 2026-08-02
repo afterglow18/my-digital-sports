@@ -51,6 +51,12 @@ function Router() {
 function AppShell() {
   const [entered, setEntered]   = useState<boolean>(hasEntered);
   const { isIndexing }          = useVisionIndexer();
+  // Don't flash the toast immediately on cold launch — wait 6 s before showing it
+  const [toastReady, setToastReady] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setToastReady(true), 6000);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleEnter = useCallback(() => {
     markEntered();
